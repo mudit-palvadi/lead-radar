@@ -63,7 +63,7 @@ care about open-source AI. See [Why open matters](#why-open-innovation-matters) 
 
 ```bash
 # Run it locally
-git clone https://github.com/[you]/leadradar.git
+git clone https://github.com/mudit-palvadi/lead-radar.git
 cd leadradar
 npm install
 cp .env.example .env      # add your tokens
