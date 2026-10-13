@@ -1,32 +1,24 @@
 import type { BusinessLead, ClassificationResult, EmailDraft, LeadSignal } from '../types.js';
 import { config } from '../config.js';
+import { GroqProvider } from './groq.js';
+import { OllamaProvider } from './ollama.js';
+import type { AIProvider } from './provider.js';
 
-const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
+let current: AIProvider | null = null;
 
-async function callGroq(prompt: string): Promise<string> {
-  const response = await fetch(GROQ_URL, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${config.groq.apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: config.groq.model,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0,
-      max_tokens: 1024,
-    }),
-  });
+export function getProvider(): AIProvider {
+  if (current) return current;
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Groq API error (${response.status}): ${error}`);
+  current =
+    config.ai.provider === 'ollama' ? new OllamaProvider() : new GroqProvider();
+
+  if (current.isLocal) {
+    console.log(`[ai] using local Ollama model: ${config.ai.ollama.model}`);
+  } else {
+    console.log(`[ai] using hosted Groq model: ${config.ai.groq.model}`);
   }
 
-  const data = (await response.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
-  };
-  return data.choices?.[0]?.message?.content ?? '';
+  return current;
 }
 
 function extractJson(text: string): unknown | null {
@@ -43,10 +35,8 @@ export async function classifyLead(
   lead: Pick<BusinessLead, 'name' | 'address' | 'website' | 'rating' | 'reviewCount' | 'category'>,
   service: string,
 ): Promise<ClassificationResult> {
-  const prompt = buildClassificationPrompt(lead, service);
-
   try {
-    const parsed = extractJson(await callGroq(prompt)) as ClassificationResult | null;
+    const parsed = extractJson(await getProvider().complete(buildClassificationPrompt(lead, service))) as ClassificationResult | null;
     if (!parsed) {
       return { score: 50, signals: [], reasoning: 'Could not parse classification result.' };
     }
@@ -65,30 +55,10 @@ export async function draftOutreachEmail(
   lead: BusinessLead,
   service: string,
 ): Promise<EmailDraft> {
-  const signalSummary = lead.signals
-    .map((s) => `- ${s.description} (${s.severity})`)
-    .join('\n');
-
-  const prompt = `You are writing a personalized outreach email for a freelance ${service} provider.
-
-Business: ${lead.name}
-Location: ${lead.address}
-${lead.website ? `Website: ${lead.website}` : 'No website found'}
-Rating: ${lead.rating || 'N/A'} (${lead.reviewCount || 0} reviews)
-
-Signals detected:
-${signalSummary}
-
-Write a short, personalized email (under 150 words) that:
-1. References something specific about this business
-2. Mentions the problem you noticed without being condescending
-3. Offers a clear next step (call, meeting, or free audit)
-4. Sounds human, not like a template
-
-Return JSON with keys: subject, body, tone (one of: professional, friendly, direct)`;
-
   try {
-    const parsed = extractJson(await callGroq(prompt)) as EmailDraft | null;
+    const parsed = extractJson(
+      await getProvider().complete(buildOutreachPrompt(lead, service)),
+    ) as EmailDraft | null;
     if (!parsed) return fallbackEmail(lead, service);
     return {
       subject: String(parsed.subject || ''),
@@ -128,4 +98,28 @@ Rate 0-100 based on:
 - No Google Business profile
 
 Return JSON with keys: score, signals (array of {type, description, severity}), reasoning`;
+}
+
+function buildOutreachPrompt(lead: BusinessLead, service: string): string {
+  const signalSummary = lead.signals
+    .map((s) => `- ${s.description} (${s.severity})`)
+    .join('\n');
+
+  return `You are writing a personalized outreach email for a freelance ${service} provider.
+
+Business: ${lead.name}
+Location: ${lead.address}
+${lead.website ? `Website: ${lead.website}` : 'No website found'}
+Rating: ${lead.rating || 'N/A'} (${lead.reviewCount || 0} reviews)
+
+Signals detected:
+${signalSummary}
+
+Write a short, personalized email (under 150 words) that:
+1. References something specific about this business
+2. Mentions the problem you noticed without being condescending
+3. Offers a clear next step (call, meeting, or free audit)
+4. Sounds human, not like a template
+
+Return JSON with keys: subject, body, tone (one of: professional, friendly, direct)`;
 }

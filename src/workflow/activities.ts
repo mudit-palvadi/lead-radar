@@ -1,6 +1,6 @@
 import type { BusinessLead, ScanRequest } from '../types.js';
 import { searchBusinesses } from '../search/serpapi.js';
-import { classifyLead, draftOutreachEmail } from '../ai/gemma.js';
+import { classifyLead, draftOutreachEmail } from '../ai/index.js';
 
 export async function scanBusinesses(request: ScanRequest): Promise<BusinessLead[]> {
   const leads = await searchBusinesses(

@@ -1,11 +1,26 @@
 import 'dotenv/config';
 
+export type AIProviderName = 'ollama' | 'groq';
+
+function pickProvider(): AIProviderName {
+  const value = process.env.AI_PROVIDER?.toLowerCase();
+  if (value === 'ollama') return 'ollama';
+  return 'groq';
+}
+
 export const config = {
   port: parseInt(process.env.PORT || '3000', 10),
 
-  groq: {
-    apiKey: process.env.GROQ_API_KEY || '',
-    model: process.env.GROQ_MODEL || 'gemma2-9b-it',
+  ai: {
+    provider: pickProvider(),
+    ollama: {
+      host: process.env.OLLAMA_HOST || 'http://localhost:11434',
+      model: process.env.OLLAMA_MODEL || 'qwen3:8b',
+    },
+    groq: {
+      apiKey: process.env.GROQ_API_KEY || '',
+      model: process.env.GROQ_MODEL || 'qwen/qwen3.8-27b',
+    },
   },
 
   serpapi: {
