@@ -45,7 +45,7 @@ You tell it two things: **what you do** and **where you do it**. LeadRadar handl
    missing website, the exact problem it spotted. Something you'd actually be OK sending.
 
 **The interesting part:** the reason this is *possible* for a freelancer is the same reason judges
-care about open-source AI. See [Why open matters](#why-open-innovation-matters) for the honest answer.
+care about open-source AI.
 
 <div align="center">
   <img src="docs/images/scan-form.svg" alt="The scan form" width="640"/>
@@ -70,8 +70,7 @@ npm run dev                 # 3. the API
 
 Then open `http://localhost:3000`, type a service and a city, and hit **Start Scan**.
 
-The first scan takes a minute or two. After that it's fast — see
-[the timing note](#performance) below.
+The first scan takes a minute or two. After that it's fast — see the note below.
 
 ### Configuration
 
@@ -132,31 +131,7 @@ is stored in **MongoDB Atlas**, so a scan you ran last week is still there when 
 
 ---
 
-## Why open innovation matters
-
-This one is not a slogan. It's the arithmetic.
-
-**Closed-API pricing would break the thing.** LeadRadar runs Gemma 3n twice per lead — once to
-score it, once to write the email. Roughly **50 model calls for a 25-lead scan**. A typical hosted
-model API bills by the token, and by the time you've paid to classify *and* draft for every lead,
-you've spent real money every time a freelancer hits "Start Scan".
-
-With Gemma's open weights, **the marginal cost per lead is effectively zero**. My friend's
-three-hour Monday morning costs nothing to replace.
-
-That has a second effect, and it's the one that matters for the "side hustle" part of this challenge:
-
-**$0 per lead changes what you can charge.** If each scan costs you nothing, this can be a tool a
-freelancer *pays* $20 a month for — and you still keep a business, because the AI running it doesn't
-have a bill attached. That entire category of small, specific, useful software exists *because* the
-model at the centre of it is open.
-
-And practically: **open weights mean you can leave.** Swap Gemma for Qwen, Llama or Mistral by
-changing one variable. The pipeline doesn't care, because it never did.
-
----
-
-## <a id="performance"></a> Performance, honestly
+## Performance, honestly
 
 The first scan is slower than it should be: loading the model into the Hugging Face free tier can
 take 20–30 seconds before the first lead comes back. After that, calls are a few seconds each.
@@ -167,27 +142,6 @@ means the other nineteen still land in your table.
 
 ---
 
-<a id="first-user"></a>
-## The first user
-
-*This section is filled in after David runs his first scan — his words, not mine.*
-
-> _"..."_ — David, freelance web designer
-
----
-
-## Prize categories
-
-This submission enters:
-
-- **Best Use of Gemma** — Gemma 3n is the classifier and the email writer.
-- **Best Use of Temporal** — the scan/classify/draft pipeline is one durable workflow with retries.
-- **Best Use of MongoDB Atlas** — every lead, score and draft persists here.
-- **Best Use of SerpApi** — every lead comes from live Google Maps data.
-- **Best Use of Render** — the API and worker both deploy from `render.yaml`.
-
----
-
 ## License
 
-MIT. Take it, run it, sell it. That's the point.
+[MIT](LICENSE). Take it, run it, sell it. That's the point.
