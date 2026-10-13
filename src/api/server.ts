@@ -1,10 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
+import { WorkflowClient, Connection } from '@temporalio/client';
 import { config } from '../config.js';
 import { ScanRequestSchema } from '../types.js';
 import { ScanModel } from '../db/models.js';
 import { connectDatabase } from '../db/connection.js';
+import { leadRadarScanWorkflow } from '../workflow/scanWorkflow.js';
 
 const app = express();
 app.use(cors());
@@ -27,6 +29,21 @@ app.post('/api/scans', async (req, res) => {
 
   await scan.save();
 
+  const connection = await Connection.connect({
+    address: config.temporal.address,
+  });
+
+  const client = new WorkflowClient({
+    connection,
+    namespace: config.temporal.namespace,
+  });
+
+  await client.start(leadRadarScanWorkflow, {
+    args: [parsed.data],
+    taskQueue: config.temporal.taskQueue,
+    workflowId: scanId,
+  });
+
   res.status(202).json({
     scanId,
     status: 'pending',
@@ -39,6 +56,48 @@ app.get('/api/scans/:id', async (req, res) => {
   if (!scan) {
     res.status(404).json({ error: 'Scan not found' });
     return;
+  }
+
+  if (scan.status === 'pending') {
+    const connection = await Connection.connect({
+      address: config.temporal.address,
+    });
+
+    const client = new WorkflowClient({
+      connection,
+      namespace: config.temporal.namespace,
+    });
+
+    const handle = client.getHandle(scan.scanId);
+
+    try {
+      const status = await handle.query('scanStatus');
+      scan.status = status as typeof scan.status;
+    } catch {
+      // Workflow not yet reachable
+    }
+  }
+
+  if (scan.status === 'complete' && scan.leads.length === 0) {
+    const connection = await Connection.connect({
+      address: config.temporal.address,
+    });
+
+    const client = new WorkflowClient({
+      connection,
+      namespace: config.temporal.namespace,
+    });
+
+    const handle = client.getHandle(scan.scanId);
+
+    try {
+      const leads = await handle.result();
+      scan.leads = leads;
+      scan.status = 'complete';
+      await scan.save();
+    } catch {
+      // Workflow result not yet available
+    }
   }
 
   res.json({
