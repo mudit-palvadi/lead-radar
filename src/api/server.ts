@@ -3,7 +3,7 @@ import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
 import { WorkflowClient } from '@temporalio/client';
 import { config } from '../config.js';
-import { ScanRequestSchema } from '../types.js';
+import { ScanRequestSchema, normalizeCriteria } from '../types.js';
 import { ScanModel } from '../db/models.js';
 import { connectDatabase } from '../db/connection.js';
 import { leadRadarScanWorkflow } from '../workflow/scanWorkflow.js';
@@ -36,7 +36,12 @@ app.post('/api/scans', async (req, res) => {
   const scanId = uuidv4();
   const scan = new ScanModel({
     scanId,
-    request: parsed.data,
+    request: {
+      service: parsed.data.service,
+      location: parsed.data.location,
+      criteria: normalizeCriteria(parsed.data.criteria),
+      maxLeads: parsed.data.maxLeads,
+    },
     leads: [],
     status: 'pending',
   });

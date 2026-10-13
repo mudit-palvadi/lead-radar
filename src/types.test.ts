@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ScanRequestSchema } from './types';
+import { ScanRequestSchema, normalizeCriteria } from './types';
 
 describe('ScanRequestSchema', () => {
   it('accepts a valid minimal request', () => {
@@ -23,32 +23,43 @@ describe('ScanRequestSchema', () => {
 
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.criteria.noWebsite).toBe(true);
-      expect(result.data.criteria.outdatedWebsite).toBe(true);
-      expect(result.data.criteria.noGoogleBusiness).toBe(true);
-      expect(result.data.criteria.badReviewsNoResponse).toBe(false);
+      expect(result.data.criteria).toEqual(['noWebsite', 'outdatedWebsite', 'noGoogleBusiness']);
       expect(result.data.maxLeads).toBe(50);
     }
   });
 
-  it('accepts explicit criteria and maxLeads values', () => {
+  it('accepts criteria as an array of keys, as the front end sends them', () => {
     const result = ScanRequestSchema.safeParse({
       service: 'plumbing',
       location: 'Seattle, WA',
-      criteria: {
-        noWebsite: false,
-        outdatedWebsite: false,
-        noGoogleBusiness: false,
-        badReviewsNoResponse: true,
-      },
+      criteria: ['noWebsite', 'badReviewsNoResponse'],
       maxLeads: 25,
     });
 
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.criteria.noWebsite).toBe(false);
+      expect(result.data.criteria).toEqual(['noWebsite', 'badReviewsNoResponse']);
       expect(result.data.maxLeads).toBe(25);
     }
+  });
+
+  it('rejects unknown criteria keys', () => {
+    const result = ScanRequestSchema.safeParse({
+      service: 'plumbing',
+      location: 'Seattle, WA',
+      criteria: ['notARealCriterion'],
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it('normalizes criteria into the stored object shape', () => {
+    expect(normalizeCriteria(['noWebsite'])).toEqual({
+      noWebsite: true,
+      outdatedWebsite: false,
+      noGoogleBusiness: false,
+      badReviewsNoResponse: false,
+    });
   });
 
   it('rejects service shorter than 2 characters', () => {
@@ -62,7 +73,7 @@ describe('ScanRequestSchema', () => {
 
   it('rejects missing location', () => {
     const result = ScanRequestSchema.safeParse({
-      service: ' roofing',
+      service: 'roofing',
     });
 
     expect(result.success).toBe(false);

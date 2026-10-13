@@ -1,18 +1,44 @@
 import { z } from 'zod';
 
+export const CRITERIA_KEYS = [
+  'noWebsite',
+  'outdatedWebsite',
+  'noGoogleBusiness',
+  'badReviewsNoResponse',
+] as const;
+
+export type CriteriaKey = (typeof CRITERIA_KEYS)[number];
+
+export interface CriteriaObject {
+  noWebsite: boolean;
+  outdatedWebsite: boolean;
+  noGoogleBusiness: boolean;
+  badReviewsNoResponse: boolean;
+}
+
+/**
+ * The front end sends criteria as an array of the checked keys, e.g.
+ * ["noWebsite", "outdatedWebsite"]. The stored shape is the object below.
+ */
 export const ScanRequestSchema = z.object({
   service: z.string().min(2).max(100),
   location: z.string().min(2).max(100),
-  criteria: z.object({
-    noWebsite: z.boolean().default(true),
-    outdatedWebsite: z.boolean().default(true),
-    noGoogleBusiness: z.boolean().default(true),
-    badReviewsNoResponse: z.boolean().default(false),
-  }),
+  criteria: z
+    .array(z.enum(CRITERIA_KEYS))
+    .default(['noWebsite', 'outdatedWebsite', 'noGoogleBusiness']),
   maxLeads: z.number().int().min(5).max(100).default(50),
 });
 
 export type ScanRequest = z.infer<typeof ScanRequestSchema>;
+
+export function normalizeCriteria(criteria: CriteriaKey[]): CriteriaObject {
+  return {
+    noWebsite: criteria.includes('noWebsite'),
+    outdatedWebsite: criteria.includes('outdatedWebsite'),
+    noGoogleBusiness: criteria.includes('noGoogleBusiness'),
+    badReviewsNoResponse: criteria.includes('badReviewsNoResponse'),
+  };
+}
 
 export interface BusinessLead {
   id: string;
