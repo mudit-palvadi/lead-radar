@@ -17,13 +17,28 @@ export async function classifyLeads(
 ): Promise<BusinessLead[]> {
   const classified: BusinessLead[] = [];
 
-  for (const lead of leads) {
-    const result = await classifyLead(lead, service);
-    classified.push({
-      ...lead,
-      score: result.score,
-      signals: [...lead.signals, ...result.signals],
-    });
+  for (let i = 0; i < leads.length; i += 5) {
+    const batch = leads.slice(i, i + 5);
+    const results = await Promise.allSettled(
+      batch.map((lead) => classifyLead(lead, service)),
+    );
+
+    for (let j = 0; j < batch.length; j++) {
+      const result = results[j];
+      if (result.status === 'fulfilled') {
+        classified.push({
+          ...batch[j],
+          score: result.value.score,
+          signals: [...batch[j].signals, ...result.value.signals],
+        });
+      } else {
+        classified.push({
+          ...batch[j],
+          score: 0,
+          signals: batch[j].signals,
+        });
+      }
+    }
   }
 
   return classified.sort((a, b) => b.score - a.score);
@@ -36,12 +51,23 @@ export async function draftEmails(
   const topLeads = leads.slice(0, 10);
   const drafted: BusinessLead[] = [];
 
-  for (const lead of topLeads) {
-    const email = await draftOutreachEmail(lead, service);
-    drafted.push({
-      ...lead,
-      outreachEmail: `Subject: ${email.subject}\n\n${email.body}`,
-    });
+  for (let i = 0; i < topLeads.length; i += 3) {
+    const batch = topLeads.slice(i, i + 3);
+    const results = await Promise.allSettled(
+      batch.map((lead) => draftOutreachEmail(lead, service)),
+    );
+
+    for (let j = 0; j < batch.length; j++) {
+      const result = results[j];
+      if (result.status === 'fulfilled') {
+        drafted.push({
+          ...batch[j],
+          outreachEmail: `Subject: ${result.value.subject}\n\n${result.value.body}`,
+        });
+      } else {
+        drafted.push(batch[j]);
+      }
+    }
   }
 
   return [...drafted, ...leads.slice(10)];

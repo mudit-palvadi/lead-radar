@@ -12,6 +12,21 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+let workflowClient: WorkflowClient | null = null;
+
+async function getWorkflowClient(): Promise<WorkflowClient> {
+  if (!workflowClient) {
+    const connection = await Connection.connect({
+      address: config.temporal.address,
+    });
+    workflowClient = new WorkflowClient({
+      connection,
+      namespace: config.temporal.namespace,
+    });
+  }
+  return workflowClient;
+}
+
 app.post('/api/scans', async (req, res) => {
   const parsed = ScanRequestSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -29,20 +44,20 @@ app.post('/api/scans', async (req, res) => {
 
   await scan.save();
 
-  const connection = await Connection.connect({
-    address: config.temporal.address,
-  });
-
-  const client = new WorkflowClient({
-    connection,
-    namespace: config.temporal.namespace,
-  });
-
-  await client.start(leadRadarScanWorkflow, {
-    args: [parsed.data],
-    taskQueue: config.temporal.taskQueue,
-    workflowId: scanId,
-  });
+  try {
+    const client = await getWorkflowClient();
+    await client.start(leadRadarScanWorkflow, {
+      args: [parsed.data],
+      taskQueue: config.temporal.taskQueue,
+      workflowId: scanId,
+    });
+  } catch (error) {
+    scan.status = 'failed';
+    scan.error = error instanceof Error ? error.message : 'Failed to start workflow';
+    await scan.save();
+    res.status(500).json({ error: 'Failed to start scan', scanId });
+    return;
+  }
 
   res.status(202).json({
     scanId,
@@ -58,45 +73,27 @@ app.get('/api/scans/:id', async (req, res) => {
     return;
   }
 
-  if (scan.status === 'pending') {
-    const connection = await Connection.connect({
-      address: config.temporal.address,
-    });
-
-    const client = new WorkflowClient({
-      connection,
-      namespace: config.temporal.namespace,
-    });
-
-    const handle = client.getHandle(scan.scanId);
-
+  if (scan.status === 'pending' || scan.status === 'scanning' || scan.status === 'classifying' || scan.status === 'drafting') {
     try {
+      const client = await getWorkflowClient();
+      const handle = client.getHandle(scan.scanId);
+
       const status = await handle.query('scanStatus');
       scan.status = status as typeof scan.status;
-    } catch {
-      // Workflow not yet reachable
-    }
-  }
 
-  if (scan.status === 'complete' && scan.leads.length === 0) {
-    const connection = await Connection.connect({
-      address: config.temporal.address,
-    });
+      if (status === 'complete' && scan.leads.length === 0) {
+        try {
+          const leads = await handle.result();
+          scan.leads = leads;
+          scan.status = 'complete';
+        } catch {
+          // Workflow completed but result not yet available
+        }
+      }
 
-    const client = new WorkflowClient({
-      connection,
-      namespace: config.temporal.namespace,
-    });
-
-    const handle = client.getHandle(scan.scanId);
-
-    try {
-      const leads = await handle.result();
-      scan.leads = leads;
-      scan.status = 'complete';
       await scan.save();
     } catch {
-      // Workflow result not yet available
+      // Temporal not reachable — return cached status
     }
   }
 
