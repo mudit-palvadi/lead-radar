@@ -1,12 +1,13 @@
 import express from 'express';
 import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
-import { WorkflowClient, Connection } from '@temporalio/client';
+import { WorkflowClient } from '@temporalio/client';
 import { config } from '../config.js';
 import { ScanRequestSchema } from '../types.js';
 import { ScanModel } from '../db/models.js';
 import { connectDatabase } from '../db/connection.js';
 import { leadRadarScanWorkflow } from '../workflow/scanWorkflow.js';
+import { getConnection } from '../temporal.js';
 
 const app = express();
 app.use(cors());
@@ -16,9 +17,7 @@ let workflowClient: WorkflowClient | null = null;
 
 async function getWorkflowClient(): Promise<WorkflowClient> {
   if (!workflowClient) {
-    const connection = await Connection.connect({
-      address: config.temporal.address,
-    });
+    const connection = await getConnection();
     workflowClient = new WorkflowClient({
       connection,
       namespace: config.temporal.namespace,
