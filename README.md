@@ -62,19 +62,36 @@ care about open-source AI. See [Why open matters](#why-open-innovation-matters) 
 > **Live:** `[your-app].onrender.com` — deployed on Render. Try a scan for `Web Development` in your own city.
 
 ```bash
-# Run it locally
-git clone https://github.com/mudit-palvadi/lead-radar.git
-cd leadradar
-npm install
-cp .env.example .env      # add your tokens
-npm run worker            # terminal 1
-npm run dev               # terminal 2
+# Run it locally — three terminals, this order
+temporal server start-dev   # 1. Temporal dev server (localhost:7233)
+npm run worker              # 2. the worker
+npm run dev                 # 3. the API
 ```
 
 Then open `http://localhost:3000`, type a service and a city, and hit **Start Scan**.
 
 The first scan takes a minute or two. After that it's fast — see
 [the timing note](#performance) below.
+
+### Configuration
+
+Copy `.env.example` to `.env` and fill in what you have. Only `HF_TOKEN` is
+required — everything else falls back to a working default.
+
+| Variable | Required | What it does |
+|---|---|---|
+| `HF_TOKEN` | **Yes** | Hugging Face access token. This is the brain — nothing runs without it. |
+| `HF_MODEL` | No | Model ID. Defaults to `google/gemma-3-4b-it`. |
+| `SERPAPI_KEY` | No | SerpApi key. Without it you get synthetic sample leads; with it, real businesses. |
+| `MONGODB_URI` | No | MongoDB Atlas connection string. Defaults to local `mongodb://localhost:27017/leadradar`. |
+| `TEMPORAL_ADDRESS` | No | Where Temporal lives. Defaults to `localhost:7233` for local dev. |
+| `TEMPORAL_NAMESPACE` | No | Defaults to `default`. |
+| `TEMPORAL_API_KEY` | No | Set this only for **Temporal Cloud**. When present, the worker and API switch to TLS + API-key auth automatically — no code change. |
+
+**Local:** leave `TEMPORAL_API_KEY` blank and run `temporal server start-dev`.
+
+**Deployed:** sign up for [Temporal Cloud](https://temporal.io) (free tier), create a namespace, then set
+`TEMPORAL_ADDRESS` to your Cloud endpoint and `TEMPORAL_API_KEY` to your key.
 
 ---
 
