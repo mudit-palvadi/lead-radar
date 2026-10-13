@@ -9,9 +9,9 @@ function required(name: string): string {
 export const config = {
   port: parseInt(process.env.PORT || '3000', 10),
 
-  ollama: {
-    host: process.env.OLLAMA_HOST || 'http://localhost:11434',
-    model: process.env.OLLAMA_MODEL || 'gemma3n:e4b',
+  hf: {
+    token: process.env.HF_TOKEN || '',
+    model: process.env.HF_MODEL || 'google/gemma-3-4b-it',
   },
 
   serpapi: {

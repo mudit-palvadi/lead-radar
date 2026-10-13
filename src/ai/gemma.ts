@@ -1,8 +1,29 @@
-import { Ollama } from 'ollama';
 import type { BusinessLead, ClassificationResult, EmailDraft, LeadSignal } from '../types.js';
 import { config } from '../config.js';
 
-const ollama = new Ollama({ host: config.ollama.host });
+const HF_ENDPOINT = `https://api-inference.huggingface.co/models/${config.hf.model}`;
+
+async function callHuggingFace(prompt: string): Promise<string> {
+  const response = await fetch(HF_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${config.hf.token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      inputs: prompt,
+      parameters: { return_full_text: false, max_new_tokens: 1024 },
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Hugging Face API error (${response.status}): ${error}`);
+  }
+
+  const data = await response.json() as Array<{ generated_text: string }>;
+  return data[0]?.generated_text ?? '';
+}
 
 export async function classifyLead(
   lead: Pick<BusinessLead, 'name' | 'address' | 'website' | 'rating' | 'reviewCount' | 'category'>,
@@ -10,40 +31,21 @@ export async function classifyLead(
 ): Promise<ClassificationResult> {
   const prompt = buildClassificationPrompt(lead, service);
 
-  const response = await ollama.generate({
-    model: config.ollama.model,
-    prompt,
-    format: {
-      type: 'object',
-      properties: {
-        score: { type: 'number', description: '0-100 likelihood this business needs the service' },
-        signals: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              type: { type: 'string' },
-              description: { type: 'string' },
-              severity: { type: 'string', enum: ['high', 'medium', 'low'] },
-            },
-          },
-        },
-        reasoning: { type: 'string' },
-      },
-      required: ['score', 'signals', 'reasoning'],
-    },
-    stream: false,
-  });
-
   try {
-    const parsed = JSON.parse(response.response);
+    const raw = await callHuggingFace(prompt);
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return { score: 50, signals: [], reasoning: 'Could not parse classification result.' };
+    }
+    const parsed = JSON.parse(jsonMatch[0]);
     return {
       score: Math.min(100, Math.max(0, parsed.score)),
       signals: parsed.signals as LeadSignal[],
       reasoning: parsed.reasoning,
     };
-  } catch {
-    return { score: 50, signals: [], reasoning: 'Could not parse classification result.' };
+  } catch (error) {
+    console.warn('Classification failed:', error);
+    return { score: 50, signals: [], reasoning: 'Classification unavailable.' };
   }
 }
 
@@ -73,24 +75,19 @@ Write a short, personalized email (under 150 words) that:
 
 Return JSON with keys: subject, body, tone (one of: professional, friendly, direct)`;
 
-  const response = await ollama.generate({
-    model: config.ollama.model,
-    prompt,
-    format: {
-      type: 'object',
-      properties: {
-        subject: { type: 'string' },
-        body: { type: 'string' },
-        tone: { type: 'string', enum: ['professional', 'friendly', 'direct'] },
-      },
-      required: ['subject', 'body', 'tone'],
-    },
-    stream: false,
-  });
-
   try {
-    return JSON.parse(response.response);
-  } catch {
+    const raw = await callHuggingFace(prompt);
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return {
+        subject: `Helping ${lead.name} with ${service}`,
+        body: `Hi ${lead.name} team,\n\nI noticed your business online and had some ideas about how I could help with your ${service} needs. Would you be open to a quick 10-minute call this week?\n\nBest regards`,
+        tone: 'professional',
+      };
+    }
+    return JSON.parse(jsonMatch[0]);
+  } catch (error) {
+    console.warn('Email drafting failed:', error);
     return {
       subject: `Helping ${lead.name} with ${service}`,
       body: `Hi ${lead.name} team,\n\nI noticed your business online and had some ideas about how I could help with your ${service} needs. Would you be open to a quick 10-minute call this week?\n\nBest regards`,
