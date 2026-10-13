@@ -41,6 +41,23 @@ npm run dev
 
 See [.env.example](.env.example) for all required configuration.
 
+## Deploy on Render
+
+LeadRadar ships with a Render Blueprint — one click and your API + Temporal worker are live.
+
+### Quick Deploy
+
+1. Push this repo to GitHub.
+2. On [Render](https://render.com/), go to **New** → **Blueprint** and select your repo.
+3. Set the required environment variables (`MONGODB_URI`, `SERPAPI_KEY`, etc.).
+4. Click **Apply** — Render provisions a **Web Service** (`leadradar-api`) and a **Background Worker** (`leadradar-worker`).
+
+See [README-RENDER.md](README-RENDER.md) for full deployment instructions, manual setup, and troubleshooting.
+
+### Docker
+
+A `Dockerfile` is also included for container-based deployments.
+
 ## License
 
 MIT

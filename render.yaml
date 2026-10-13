@@ -1,0 +1,49 @@
+services:
+  - type: web
+    name: leadradar-api
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: PORT
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: SERPAPI_KEY
+        sync: false
+      - key: OLLAMA_HOST
+        value: http://localhost:11434
+      - key: OLLAMA_MODEL
+        value: gemma3n:e4b
+      - key: TEMPORAL_ADDRESS
+        value: localhost:7233
+      - key: TEMPORAL_NAMESPACE
+        value: default
+
+  - type: worker
+    name: leadradar-worker
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run worker
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: PORT
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: SERPAPI_KEY
+        sync: false
+      - key: OLLAMA_HOST
+        value: http://localhost:11434
+      - key: OLLAMA_MODEL
+        value: gemma3n:e4b
+      - key: TEMPORAL_ADDRESS
+        value: localhost:7233
+      - key: TEMPORAL_NAMESPACE
+        value: default
