@@ -3,12 +3,12 @@
   <p><strong>Find the businesses that need you, before they know they need you.</strong></p>
   <p>An open-source AI agent that scans local businesses, spots the ones that need your service,<br/>and writes the first email for you.</p>
   <p>
-    <img src="https://img.shields.io/badge/Gemma_3n-open_weights-1a73e8?style=for-the-badge&logo=google&logoColor=white" alt="Gemma 3n open weights"/>
+    <img src="https://img.shields.io/badge/Gemma_2-open_weights-1a73e8?style=for-the-badge&logo=google&logoColor=white" alt="Gemma 2 open weights"/>
     <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"/>
     <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js"/>
     <img src="https://img.shields.io/badge/Temporal-000000?style=for-the-badge&logo=temporal&logoColor=white" alt="Temporal"/>
     <img src="https://img.shields.io/badge/MongoDB_Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB Atlas"/>
-    <img src="https://img.shields.io/badge/Hugging_Face-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black" alt="Hugging Face"/>
+    <img src="https://img.shields.io/badge/Groq-F55036?style=for-the-badge&logo=lightning&logoColor=white" alt="Groq"/>
     <img src="https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=black" alt="Render"/>
     <img src="https://img.shields.io/badge/SerpApi-0EA5E9?style=for-the-badge" alt="SerpApi"/>
     <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License: MIT"/>
@@ -36,7 +36,7 @@ So I built LeadRadar, and gave it the boring half of his job.
 You tell it two things: **what you do** and **where you do it**. LeadRadar handles the rest.
 
 1. **Finds local businesses** through SerpApi — real Google Maps data, not stale directories.
-2. **Reads each one like a prospector would.** Gemma 3n scores every business 0–100 on how badly
+2. **Reads each one like a prospector would.** Gemma 2 scores every business 0–100 on how badly
    they need your service, and says *why*: no website, a broken one, a 9-review shop that never
    replies, an empty Google Business profile.
 3. **Ranks the list** so the strongest leads sit at the top.
@@ -74,13 +74,13 @@ The first scan takes a minute or two. After that it's fast — see the note belo
 
 ### Configuration
 
-Copy `.env.example` to `.env` and fill in what you have. Only `HF_TOKEN` is
+Copy `.env.example` to `.env` and fill in what you have. Only `GROQ_API_KEY` is
 required — everything else falls back to a working default.
 
 | Variable | Required | What it does |
 |---|---|---|
-| `HF_TOKEN` | **Yes** | Hugging Face access token. This is the brain — nothing runs without it. |
-| `HF_MODEL` | No | Model ID. Defaults to `google/gemma-3-4b-it`. |
+| `GROQ_API_KEY` | **Yes** | Groq API key. This is the brain — nothing runs without it. |
+| `GROQ_MODEL` | No | Model ID. Defaults to `gemma2-9b-it` (Google's open-weight Gemma). |
 | `SERPAPI_KEY` | No | SerpApi key. Without it you get synthetic sample leads; with it, real businesses. |
 | `MONGODB_URI` | No | MongoDB Atlas connection string. Defaults to local `mongodb://localhost:27017/leadradar`. |
 | `TEMPORAL_ADDRESS` | No | Where Temporal lives. Defaults to `localhost:7233` for local dev. |
@@ -98,7 +98,7 @@ required — everything else falls back to a working default.
 
 ```
      ┌─────────────┐     ┌──────────────┐     ┌──────────────┐
-     │   SerpApi   │ ──▶ │   Gemma 3n   │ ──▶ │   Outreach   │
+     │   SerpApi   │ ──▶ │   Gemma 2   │ ──▶ │   Outreach   │
      │  (find them)│     │  (read them) │     │ (reach out)  │
      └─────────────┘     └──────┬───────┘     └──────────────┘
                                   │
@@ -113,7 +113,7 @@ required — everything else falls back to a working default.
                          └─────────────────┘
 ```
 
-The whole pipeline runs as one **Temporal** workflow — scan, classify, draft — so a Hugging Face
+The whole pipeline runs as one **Temporal** workflow — scan, classify, draft — so a Groq
 timeout or a flaky SerpApi call becomes a retry instead of a lost scan. Every lead, score and draft
 is stored in **MongoDB Atlas**, so a scan you ran last week is still there when you come back.
 
@@ -122,7 +122,7 @@ is stored in **MongoDB Atlas**, so a scan you ran last week is still there when 
 | Layer | Choice | Why |
 |---|---|---|
 | Language | **TypeScript** on Node 22 | Strict types on a multi-step pipeline catch bad data before it becomes a bad email. |
-| The brain | **Gemma 3n** via Hugging Face Inference API | An *open-weight* model. Same model, your own keys, no proprietary lock-in. |
+| The brain | **Gemma 2** via Groq | An *open-weight* model. Same model, your own keys, no proprietary lock-in. |
 | The durable part | **Temporal** | Scans take minutes and hit flaky APIs. Retries and resume are not optional. |
 | The data | **MongoDB Atlas** | Leads, scores and drafts; free tier is plenty. |
 | The source | **SerpApi** | Live Google Maps results. Sample-data fallback if you have no key yet. |
@@ -133,8 +133,8 @@ is stored in **MongoDB Atlas**, so a scan you ran last week is still there when 
 
 ## Performance, honestly
 
-The first scan is slower than it should be: loading the model into the Hugging Face free tier can
-take 20–30 seconds before the first lead comes back. After that, calls are a few seconds each.
+The first scan is slower than it should be only in the sense that it makes a few cold calls: each
+lead is scored, then the top ten get an email. Groq answers in well under a second.
 
 Classification runs in **batches of five**, email drafting in **threes**, so a scan finishes in
 roughly the time of its slowest call — not the sum of all of them. If one lead's call fails, `Promise.allSettled`

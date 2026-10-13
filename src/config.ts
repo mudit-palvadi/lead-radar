@@ -3,9 +3,9 @@ import 'dotenv/config';
 export const config = {
   port: parseInt(process.env.PORT || '3000', 10),
 
-  hf: {
-    token: process.env.HF_TOKEN || '',
-    model: process.env.HF_MODEL || 'google/gemma-3-4b-it',
+  groq: {
+    apiKey: process.env.GROQ_API_KEY || '',
+    model: process.env.GROQ_MODEL || 'gemma2-9b-it',
   },
 
   serpapi: {

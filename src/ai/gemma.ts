@@ -1,28 +1,42 @@
 import type { BusinessLead, ClassificationResult, EmailDraft, LeadSignal } from '../types.js';
 import { config } from '../config.js';
 
-const HF_ENDPOINT = `https://api-inference.huggingface.co/models/${config.hf.model}`;
+const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
-async function callHuggingFace(prompt: string): Promise<string> {
-  const response = await fetch(HF_ENDPOINT, {
+async function callGroq(prompt: string): Promise<string> {
+  const response = await fetch(GROQ_URL, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${config.hf.token}`,
+      Authorization: `Bearer ${config.groq.apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      inputs: prompt,
-      parameters: { return_full_text: false, max_new_tokens: 1024 },
+      model: config.groq.model,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0,
+      max_tokens: 1024,
     }),
   });
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Hugging Face API error (${response.status}): ${error}`);
+    throw new Error(`Groq API error (${response.status}): ${error}`);
   }
 
-  const data = await response.json() as Array<{ generated_text: string }>;
-  return data[0]?.generated_text ?? '';
+  const data = (await response.json()) as {
+    choices?: Array<{ message?: { content?: string } }>;
+  };
+  return data.choices?.[0]?.message?.content ?? '';
+}
+
+function extractJson(text: string): unknown | null {
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) return null;
+  try {
+    return JSON.parse(match[0]);
+  } catch {
+    return null;
+  }
 }
 
 export async function classifyLead(
@@ -32,19 +46,17 @@ export async function classifyLead(
   const prompt = buildClassificationPrompt(lead, service);
 
   try {
-    const raw = await callHuggingFace(prompt);
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
+    const parsed = extractJson(await callGroq(prompt)) as ClassificationResult | null;
+    if (!parsed) {
       return { score: 50, signals: [], reasoning: 'Could not parse classification result.' };
     }
-    const parsed = JSON.parse(jsonMatch[0]);
     return {
-      score: Math.min(100, Math.max(0, parsed.score)),
-      signals: parsed.signals as LeadSignal[],
-      reasoning: parsed.reasoning,
+      score: Math.min(100, Math.max(0, Number(parsed.score) || 0)),
+      signals: Array.isArray(parsed.signals) ? (parsed.signals as LeadSignal[]) : [],
+      reasoning: String(parsed.reasoning ?? ''),
     };
   } catch (error) {
-    console.warn('Classification failed:', error);
+    console.warn('Classification failed:', error instanceof Error ? error.message : error);
     return { score: 50, signals: [], reasoning: 'Classification unavailable.' };
   }
 }
@@ -76,24 +88,25 @@ Write a short, personalized email (under 150 words) that:
 Return JSON with keys: subject, body, tone (one of: professional, friendly, direct)`;
 
   try {
-    const raw = await callHuggingFace(prompt);
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      return {
-        subject: `Helping ${lead.name} with ${service}`,
-        body: `Hi ${lead.name} team,\n\nI noticed your business online and had some ideas about how I could help with your ${service} needs. Would you be open to a quick 10-minute call this week?\n\nBest regards`,
-        tone: 'professional',
-      };
-    }
-    return JSON.parse(jsonMatch[0]);
-  } catch (error) {
-    console.warn('Email drafting failed:', error);
+    const parsed = extractJson(await callGroq(prompt)) as EmailDraft | null;
+    if (!parsed) return fallbackEmail(lead, service);
     return {
-      subject: `Helping ${lead.name} with ${service}`,
-      body: `Hi ${lead.name} team,\n\nI noticed your business online and had some ideas about how I could help with your ${service} needs. Would you be open to a quick 10-minute call this week?\n\nBest regards`,
-      tone: 'professional',
+      subject: String(parsed.subject || ''),
+      body: String(parsed.body || ''),
+      tone: parsed.tone ?? 'professional',
     };
+  } catch (error) {
+    console.warn('Email drafting failed:', error instanceof Error ? error.message : error);
+    return fallbackEmail(lead, service);
   }
+}
+
+function fallbackEmail(lead: BusinessLead, service: string): EmailDraft {
+  return {
+    subject: `Helping ${lead.name} with ${service}`,
+    body: `Hi ${lead.name} team,\n\nI came across your business while looking for ${service} clients in the area, and had a few ideas about how I could help. Would you be open to a quick 10-minute call this week?\n\nBest regards`,
+    tone: 'professional',
+  };
 }
 
 function buildClassificationPrompt(
