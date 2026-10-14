@@ -10,7 +10,11 @@ export async function scanBusinesses(request: ScanRequest): Promise<BusinessLead
       ? `${types.join(' OR ')} in ${request.location}`
       : `${request.service} in ${request.location}`;
 
+  console.log(`[scan] business types: ${types.length ? types.join(', ') : '(none - using raw service)'}`);
+  console.log(`[scan] search query: ${query}`);
+
   const leads = await searchBusinesses(query, request.location, request.maxLeads);
+  console.log(`[scan] serpapi returned ${leads.length} leads`);
   return leads;
 }
 
