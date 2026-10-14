@@ -35,13 +35,11 @@ export async function identifyBusinessTypes(service: string): Promise<string[]> 
   try {
     const prompt = `List the types of local, consumer-facing businesses that most often need ${service}.
 
-These should be physical local businesses that serve individual customers — NOT business services, consultants, or B2B providers.
+These must be physical local businesses that serve individual customers — NOT business services, consultants, agencies, or companies that provide ${service} themselves. Never include a business type that offers ${service}.
 
 For example, for "web design" the answer is: restaurant, salon, auto repair shop, dental clinic, gym, real estate agent, plumber, electrician, roofer, pet groomer, coffee shop, bakery.
 
-For "${service}", list 8-12 similar local business types.
-
-Return JSON with a single key "types" containing an array of business type names (just the type in lowercase, no explanations). Example: {"types": ["restaurant", "salon"]}`;
+For "${service}", list 8-12 similar local business types. Return JSON with a single key "types" containing an array of business type names (lowercase, no explanations). Example: {"types": ["restaurant", "salon"]}`;
 
     const parsed = extractJson(await getProvider().complete(prompt)) as { types?: unknown } | null;
     if (!parsed || !Array.isArray(parsed.types)) return [];
