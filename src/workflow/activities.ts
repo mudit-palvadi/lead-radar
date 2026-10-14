@@ -3,25 +3,45 @@ import { searchBusinesses } from '../search/serpapi.js';
 import { classifyLead, draftOutreachEmail, identifyBusinessTypes } from '../ai/index.js';
 
 /**
+ * The model is only allowed to report signals we can actually back up with
+ * data we hold. We have a URL, not the page itself, so it can never know that
+ * a website is dated — SerpApi signals are ground truth and pass through
+ * untouched, but model claims are held to this list.
+ */
+const MODEL_VERIFIABLE_TYPES = new Set(['no_website', 'bad_reviews_no_response']);
+
+/**
  * SerpApi and the model both report on the same problems, so merging naively
  * shows the user "No website found" three times. Keep the first report of each
  * distinct type, in severity order.
  */
-function mergeSignals(fromSearch: LeadSignal[], fromModel: LeadSignal[]): LeadSignal[] {
+export function mergeSignals(fromSearch: LeadSignal[], fromModel: LeadSignal[]): LeadSignal[] {
   const seen = new Set<string>();
   const merged: LeadSignal[] = [];
 
-  for (const signal of [...fromSearch, ...fromModel]) {
-    // Every lead comes from Google Maps, so it already has a listing. Small
-    // models keep inventing this one, and it is never true.
-    if (signal.type === 'no_google_business') continue;
-    if (seen.has(signal.type)) continue;
-    seen.add(signal.type);
-    merged.push(signal);
+  // Small models vary the casing and padding of a type ("No_Website "), which
+  // is enough to slip past a naive equality check.
+  const normalize = (raw: unknown): string => String(raw ?? '').trim().toLowerCase();
+
+  // Search signals are measured facts, so they pass through as-is.
+  for (const signal of fromSearch) {
+    const type = normalize(signal.type);
+    if (!type || seen.has(type)) continue;
+    seen.add(type);
+    merged.push({ ...signal, type: type as LeadSignal['type'] });
+  }
+
+  // Model claims are held to what we can actually back up.
+  for (const signal of fromModel) {
+    const type = normalize(signal.type);
+    if (!type || !MODEL_VERIFIABLE_TYPES.has(type) || seen.has(type)) continue;
+    seen.add(type);
+    merged.push({ ...signal, type: type as LeadSignal['type'] });
   }
 
   const rank = { high: 0, medium: 1, low: 2 } as const;
-  return merged.sort((a, b) => rank[a.severity] - rank[b.severity]);
+  const severity = (s: LeadSignal) => rank[s.severity as keyof typeof rank] ?? 3;
+  return merged.sort((a, b) => severity(a) - severity(b));
 }
 
 export async function scanBusinesses(request: ScanRequest): Promise<BusinessLead[]> {

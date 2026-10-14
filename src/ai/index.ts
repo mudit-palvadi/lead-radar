@@ -118,8 +118,8 @@ Google Rating: ${lead.rating || 'N/A'} (${lead.reviewCount || 0} reviews)
 
 Score 0-100 on how badly this business needs ${service}, using these bands:
 - 90-100: active customer-facing business with no website at all
-- 70-89: has a website but it is dated or incomplete
-- 40-69: solid online presence, a modest opportunity
+- 70-89: weak online presence, worth a conversation
+- 40-69: some presence, a modest opportunity
 - 0-39: strong online presence, not a prospect worth contacting
 
 Use only these three keys:
@@ -128,20 +128,21 @@ Use only these three keys:
   "score": <integer 0-100>,
   "signals": [
     { "type": "no_website", "description": "<short reason>", "severity": "high" },
-    { "type": "outdated_website", "description": "<short reason>", "severity": "medium" }
+    { "type": "bad_reviews_no_response", "description": "<short reason>", "severity": "medium" }
   ],
   "reasoning": "<one sentence>"
 }
 
-"type" must be one of: no_website, outdated_website, bad_reviews_no_response, no_social_presence.
+"type" must be one of: no_website, bad_reviews_no_response.
 "severity" must be the string high, medium, or low — never a number.
 Return only the JSON object, with no text before or after it.
 
 Hard rules:
-- This business came from Google Maps, so it already has a Google Business Profile. Never mention its Google listing at all.
-- hasWebsite is ${lead.hasWebsite ? 'true' : 'false'}. If it is true, NEVER report no_website, and never say it has no website.
-- Only report a signal the listed data supports. Do not guess about languages, layout, design or anything not given here.
-- Do not repeat a signal you already listed.`;
+- You have NOT visited this website. You only have its address. Never claim to know anything about its design, layout, content, language or age, and never report outdated_website.
+- hasWebsite is ${lead.hasWebsite ? 'true' : 'false'}. If it is true, NEVER report no_website. If it is false, DO report no_website — that alone is often a 90.
+- Report bad_reviews_no_response only if the rating is below 3.5 with more than 5 reviews.
+- Report at most two signals, and never the same type twice.
+- If a signal does not apply, return an empty signals list rather than inventing one.`;
 }
 
 function buildOutreachPrompt(
@@ -149,32 +150,38 @@ function buildOutreachPrompt(
   service: string,
   senderName: string,
 ): string {
-  const signalSummary = lead.signals
-    .map((s) => `- ${s.description} (${s.severity})`)
-    .join('\n');
-
   const reviews = lead.reviewCount ?? 0;
-  const reputation = reviews >= 5
-    ? `${lead.rating} stars from ${reviews} reviews`
-    : 'very few public reviews';
+
+  // Only offer reputation as a fact when it's substantial. Describing a thin
+  // review count just makes the model write "given your few reviews".
+  const reputation =
+    reviews >= 5 && lead.rating
+      ? `${lead.rating} stars from ${reviews} reviews`
+      : 'not enough public reviews to be worth citing';
+
+  const facts: string[] = [];
+  if (!lead.hasWebsite) facts.push('it has no website of its own');
+  if (reviews >= 5 && lead.rating) facts.push(`it has ${lead.rating} stars from ${reviews} reviews`);
+  if (lead.category) facts.push(`it is a ${lead.category}`);
 
   return `You are ${senderName}, a freelance ${service} provider, writing to a potential client.
 
-Business: ${lead.name}
-Location: ${lead.address}
-hasWebsite: ${lead.hasWebsite ? 'true' : 'false'}
-${lead.website ? `Website: ${lead.website}` : 'No website found'}
-Reputation: ${reputation}
+What you know about this business:
+- Name: ${lead.name}
+- Location: ${lead.address}${lead.category ? `\n- Trade: ${lead.category}` : ''}
+- Website: ${lead.website || 'none'}
+- Reputation: ${reputation}
 
-Signals already detected (do not repeat or invent others):
-${signalSummary || '- none'}
+${facts.length > 0 ? `Things worth mentioning: ${facts.join('; ')}.` : 'Nothing stands out about this business online.'}
 
 Write a short email, under 120 words, that:
 1. Opens by naming the business directly. Never open with "I hope this email finds you well".
-2. Cites only facts from the list above.${reviews < 5 ? ' This business has very few reviews, so never mention review counts or ratings.' : ''}
-3. States one concrete problem you noticed.
+2. Mentions at most ONE of the things above. Never mention more than one problem.
+3. Explains that point in your own words. Never paste these notes into the email, never quote them in brackets or parentheses, and never repeat a fact twice.
 4. Ends with a clear low-friction ask.
 5. Reads like a person writing to another person, not a template.
+${reviews < 5 ? '6. Do not mention reviews or ratings at all in this email.\n' : ''}
+You have NOT visited the website. Never comment on its design, layout or content.
 
 This business is a prospective customer, not a competitor. Never describe it as offering ${service}.
 Sign off as ${senderName}. Never write "[Your Name]".
