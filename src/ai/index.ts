@@ -102,6 +102,9 @@ export function cleanEmailBody(body: string): string {
   const cleaned = (body ?? '')
     .replace(confession, '')
     .replace(filler, ' ')
+    // The "refer to it as your website" instruction sometimes gets pasted
+    // literally, parentheses included. Unwrap it rather than trusting the model.
+    .replace(/\(\s*your website\s*\)/gi, 'your website')
     .replace(/[ \t]+/g, ' ')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
@@ -237,8 +240,9 @@ Write a short email, under 120 words, that:
 8. ${pitchGuidance(service, lead.hasWebsite)}
 9. Your ONLY offer is ${service}. Never offer web design, web development, SEO, logo design, or any other service — even if the business seems to need it.
 10. Never claim to have researched the business, looked at their social media, or know whether they use social media. You have no social media data — do not invent any.
-11. Refer to their website only as "your website". Never paste a URL into the email, and never describe the website as good, bad, adequate, or serving its purpose.
-${reviews < 5 ? '12. Do not mention reviews or ratings at all in this email.\n' : ''}
+11. Refer to their website only as your website, written naturally in the sentence. Never paste a URL into the email, and never describe the website as good, bad, adequate, or serving its purpose. No adjectives for the website at all — not professional, clean, great, nice, welcoming, or any synonym.
+12. Use only the Trade listed above when describing what the business does. Never guess their services: do not call a salon a clinic, do not mention patients, treatments, menus, or any offering not listed.
+${reviews < 5 ? '13. Do not mention reviews or ratings at all in this email.\n' : ''}
 Never describe or judge the website's design, layout, content, or age — simply do not bring those topics up at all. Never mention what you have or have not checked, visited, or reviewed; just write about the business.
 
 This business is a prospective customer, not a competitor. Never describe it as offering ${service}.

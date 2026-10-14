@@ -74,6 +74,14 @@ describe('cleanEmailBody', () => {
     expect(result).not.toMatch(/hope this email finds you well/i);
     expect(result).toContain('marketing');
   });
+
+  it('unwraps a literally pasted "(your website)" instruction', () => {
+    const result = cleanEmailBody(
+      'I came across your website (your website) and liked it.',
+    );
+    expect(result).not.toMatch(/\(your website\)/i);
+    expect(result).toContain('your website');
+  });
 });
 
 describe('pitchGuidance', () => {
