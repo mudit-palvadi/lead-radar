@@ -19,7 +19,8 @@ export const config = {
     },
     groq: {
       apiKey: process.env.GROQ_API_KEY || '',
-      model: process.env.GROQ_MODEL || 'qwen/qwen3.8-27b',
+      // Small enough to stay inside Groq's free-tier tokens-per-minute cap.
+      model: process.env.GROQ_MODEL || 'allam-2-7b',
     },
   },
 

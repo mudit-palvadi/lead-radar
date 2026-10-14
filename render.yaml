@@ -3,7 +3,7 @@ services:
     name: leadradar-api
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build
+    buildCommand: npm ci && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
@@ -11,39 +11,45 @@ services:
         value: "22"
       - key: PORT
         sync: false
-      - key: MONGODB_URI
+      - key: AI_PROVIDER
+        value: groq
+      - key: GROQ_API_KEY
         sync: false
+      - key: GROQ_MODEL
+        value: allam-2-7b
       - key: SERPAPI_KEY
         sync: false
-      - key: OLLAMA_HOST
-        value: http://localhost:11434
-      - key: OLLAMA_MODEL
-        value: gemma3n:e4b
+      - key: MONGODB_URI
+        sync: false
       - key: TEMPORAL_ADDRESS
-        value: localhost:7233
+        sync: false
       - key: TEMPORAL_NAMESPACE
-        value: default
+        sync: false
+      - key: TEMPORAL_API_KEY
+        sync: false
 
   - type: worker
     name: leadradar-worker
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build
+    buildCommand: npm ci && npm run build
     startCommand: npm run worker
     envVars:
       - key: NODE_VERSION
         value: "22"
-      - key: PORT
+      - key: AI_PROVIDER
+        value: groq
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: allam-2-7b
+      - key: SERPAPI_KEY
         sync: false
       - key: MONGODB_URI
         sync: false
-      - key: SERPAPI_KEY
-        sync: false
-      - key: OLLAMA_HOST
-        value: http://localhost:11434
-      - key: OLLAMA_MODEL
-        value: gemma3n:e4b
       - key: TEMPORAL_ADDRESS
-        value: localhost:7233
+        sync: false
       - key: TEMPORAL_NAMESPACE
-        value: default
+        sync: false
+      - key: TEMPORAL_API_KEY
+        sync: false

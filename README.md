@@ -3,7 +3,7 @@
   <p><strong>Find the businesses that need you, before they know they need you.</strong></p>
   <p>An open-source AI agent that scans local businesses, spots the ones that need your service,<br/>and writes the first email for you.</p>
   <p>
-    <img src="https://img.shields.io/badge/Gemma_2-open_weights-1a73e8?style=for-the-badge&logo=google&logoColor=white" alt="Gemma 2 open weights"/>
+    <img src="https://img.shields.io/badge/ALLaM_2_7B-open_weights-1a73e8?style=for-the-badge" alt="ALLaM 2 7B open weights"/>
     <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"/>
     <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js"/>
     <img src="https://img.shields.io/badge/Temporal-000000?style=for-the-badge&logo=temporal&logoColor=white" alt="Temporal"/>
@@ -36,7 +36,7 @@ So I built LeadRadar, and gave it the boring half of his job.
 You tell it two things: **what you do** and **where you do it**. LeadRadar handles the rest.
 
 1. **Finds local businesses** through SerpApi — real Google Maps data, not stale directories.
-2. **Reads each one like a prospector would.** Gemma 2 scores every business 0–100 on how badly
+2. **Reads each one like a prospector would.** The model scores every business 0–100 on how badly
    they need your service, and says *why*: no website, a broken one, a 9-review shop that never
    replies, an empty Google Business profile.
 3. **Ranks the list** so the strongest leads sit at the top.
@@ -81,7 +81,7 @@ required — everything else falls back to a working default.
 |---|---|---|
 | `AI_PROVIDER` | No | `ollama` (local) or `groq` (hosted). Defaults to `groq`. |
 | `GROQ_API_KEY` | **Yes** for hosted mode | Groq API key. This is the brain — nothing runs without it. |
-| `GROQ_MODEL` | No | Defaults to `qwen/qwen3.8-27b` (open-weight, 128k context). |
+| `GROQ_MODEL` | No | Defaults to `allam-2-7b` — open-weight, and small enough to stay inside Groq's free-tier token limit. Swap in any Groq model. |
 | `OLLAMA_HOST` | No | Defaults to `http://localhost:11434`. |
 | `OLLAMA_MODEL` | No | Defaults to `qwen3:8b`. Pull it first with `ollama pull qwen3:8b`. |
 | `SERPAPI_KEY` | No | SerpApi key. Without it you get synthetic sample leads; with it, real businesses. |
@@ -101,7 +101,7 @@ required — everything else falls back to a working default.
 
 ```
      ┌─────────────┐     ┌──────────────┐     ┌──────────────┐
-     │   SerpApi   │ ──▶ │   Qwen 3    │ ──▶ │   Outreach   │
+     │   SerpApi   │ ──▶ │  The model │ ──▶ │   Outreach   │
      │  (find them)│     │  (read them) │     │ (reach out)  │
      └─────────────┘     └──────┬───────┘     └──────────────┘
                                   │
@@ -125,12 +125,35 @@ is stored in **MongoDB Atlas**, so a scan you ran last week is still there when 
 | Layer | Choice | Why |
 |---|---|---|
 | Language | **TypeScript** on Node 22 | Strict types on a multi-step pipeline catch bad data before it becomes a bad email. |
-| The brain | **Gemma 2** via Groq | An *open-weight* model. Same model, your own keys, no proprietary lock-in. |
+| The brain | An open-weight model via Groq or Ollama | Your weights, your key, swappable by one variable. |
 | The durable part | **Temporal** | Scans take minutes and hit flaky APIs. Retries and resume are not optional. |
 | The data | **MongoDB Atlas** | Leads, scores and drafts; free tier is plenty. |
 | The source | **SerpApi** | Live Google Maps results. Sample-data fallback if you have no key yet. |
 | The host | **Render** | One `render.yaml` blueprint for the API and the worker. |
 | The front end | A single HTML file | No build step, no framework, works on a phone. |
+
+---
+
+## Two brains, one app
+
+LeadRadar doesn't care *where* the model runs. Both paths sit behind one `AIProvider` interface and
+switch on a single environment variable:
+
+| Mode | Set | What you get |
+|---|---|---|
+| **Local** | `AI_PROVIDER=ollama` | Runs on your machine. No key, no network, nothing leaves the house. |
+| **Hosted** | `AI_PROVIDER=groq` | Groq serves an open-weight model. Sub-second, free tier, and it's what Render deploys with — an EC2-class CPU can't run a large model, and nobody waits 40 seconds for a laptop. |
+
+The prompts live in one place and are shared by both, so switching can't quietly change behaviour —
+which is the point of not being locked in:
+
+```
+src/ai/
+  index.ts     prompts + classifyLead() + draftOutreachEmail()
+  provider.ts  one interface, one factory
+  groq.ts      hosted, free tier, retries on 429
+  ollama.ts    local, private, offline
+```
 
 ---
 
