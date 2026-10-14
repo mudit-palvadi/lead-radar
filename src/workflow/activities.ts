@@ -3,7 +3,16 @@ import { searchBusinesses } from '../search/serpapi.js';
 import { classifyLead, draftOutreachEmail, identifyBusinessTypes } from '../ai/index.js';
 
 export async function scanBusinesses(request: ScanRequest): Promise<BusinessLead[]> {
-  const types = await identifyBusinessTypes(request.service);
+  const serviceWords = new Set(
+    request.service.toLowerCase().split(/\s+/).filter((w) => w.length > 2),
+  );
+
+  // Drop any type that restates the freelancer's own trade (e.g. "web design",
+  // "web design company") — those are competitors, not prospects.
+  const types = (await identifyBusinessTypes(request.service)).filter((type) => {
+    const words = type.split(/\s+/);
+    return !words.some((w) => serviceWords.has(w));
+  });
 
   const query =
     types.length > 0
