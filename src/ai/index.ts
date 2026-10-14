@@ -179,6 +179,9 @@ Write a short email, under 120 words, that:
 4. Ends with a clear low-friction ask.
 5. Reads like a person writing to another person, not a template.
 6. Address the business as "you". Never write "they", "their" or "their business".
+7. ${lead.hasWebsite
+      ? 'This business already has a website. Never offer to build them one or tell them they need an online presence. Pitch improving what they already have.'
+      : 'This business has no website, so offering to build one is the natural pitch.'}
 ${reviews < 5 ? '7. Do not mention reviews or ratings at all in this email.\n' : ''}
 You have NOT visited the website. Never comment on its design, layout or content.
 
