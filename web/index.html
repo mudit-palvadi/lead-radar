@@ -305,7 +305,78 @@
     /* ---------- Sections ---------- */
 
     section.block {
-      padding: 104px 0;
+      padding: 120px 0;
+    }
+
+    /* ---------- Hero glow ---------- */
+
+    .hero {
+      position: relative;
+      padding: 96px 0 110px;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 900px;
+      height: 600px;
+      background: radial-gradient(ellipse, rgba(255, 109, 45, 0.12) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .hero-ctas .btn-primary {
+      animation: cta-glow 2.4s ease-in-out infinite;
+    }
+
+    @keyframes cta-glow {
+      0%, 100% { box-shadow: 4px 4px 0 rgba(255, 109, 45, 0.22); }
+      50% { box-shadow: 4px 4px 0 rgba(255, 109, 45, 0.45); }
+    }
+
+    /* ---------- Built with ---------- */
+
+    .built-with {
+      text-align: center;
+      padding: 64px 0 !important;
+      border-top: var(--border);
+    }
+
+    .built-with-label {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    .built-with-logos {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+    }
+
+    .built-with-logos span {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 6px 14px;
+      transition: color 0.12s ease, border-color 0.12s ease;
+    }
+
+    .built-with-logos span:hover {
+      color: var(--accent);
+      border-color: rgba(255, 109, 45, 0.5);
     }
 
     .section-head {
@@ -676,16 +747,15 @@
       <div class="wrap">
         <div>
           <span class="sticker">Open source &middot; Free to use</span>
-          <h1>Stop scrolling Maps. Start landing <span class="highlight">clients.</span></h1>
+          <h1>Your next client is on Google Maps.<br>You just can't <span class="highlight">see them yet.</span></h1>
           <p class="hero-lede">
             Tell LeadRadar what you do and where. It finds the local businesses that need you,
-            ranks them, and writes the first email.
+            ranks them, and writes the first email — in about a minute.
           </p>
           <div class="hero-ctas">
             <a class="btn btn-primary btn-lg" href="/app">
               Find my first leads <span class="arrow" aria-hidden="true">&rarr;</span>
             </a>
-            <a class="btn btn-lg" href="#how">See how it works</a>
           </div>
           <div class="hero-fine">
             <span>No signup</span>
@@ -695,16 +765,15 @@
         </div>
 
         <div class="hero-art" aria-hidden="true">
-          <span class="sticker float float-1">+1 hot lead</span>
           <div class="window">
-            <div class="window-bar"><i></i><i></i><i></i><b>web design &middot; Austin, TX</b></div>
+            <div class="window-bar"><i></i><i></i><i></i><b>LeadRadar &mdash; Austin, TX</b></div>
             <div class="window-body">
               <div class="mock-lead">
-                <div class="score-dot hot"><div>85<small>HOT</small></div></div>
+                <div class="score-dot hot"><div>81<small>HOT</small></div></div>
                 <div>
                   <h3>Rosa's Taqueria</h3>
                   <p class="mock-meta">Restaurant &middot; &#9733; 4.7 (212 reviews)</p>
-                  <span class="tag">No website found</span>
+                  <span class="tag">No website</span>
                 </div>
               </div>
               <div class="mock-email">
@@ -723,8 +792,7 @@
               </div>
             </div>
           </div>
-          <span class="sticker float float-2">Signed with your name</span>
-          <span class="art-caption">Illustration with example data</span>
+          <span class="art-caption">Live example &mdash; real data, real email</span>
         </div>
       </div>
     </section>
@@ -879,6 +947,19 @@
       </div>
     </section>
   </main>
+
+  <section class="block built-with">
+    <div class="wrap">
+      <p class="built-with-label">Built with</p>
+      <div class="built-with-logos">
+        <span>SerpApi</span>
+        <span>Groq</span>
+        <span>MongoDB Atlas</span>
+        <span>Temporal</span>
+        <span>Render</span>
+      </div>
+    </div>
+  </section>
 
   <footer>
     <div class="wrap">

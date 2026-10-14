@@ -78,6 +78,35 @@ img, svg {
   white-space: nowrap;
 }
 
+/* ---------- Hero ---------- */
+
+.hero {
+  position: relative;
+  padding: 96px 0 110px;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 900px;
+  height: 600px;
+  background: radial-gradient(ellipse, rgba(255, 109, 45, 0.12) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.hero-ctas .btn-primary {
+  animation: cta-glow 2.4s ease-in-out infinite;
+}
+
+@keyframes cta-glow {
+  0%, 100% { box-shadow: 4px 4px 0 rgba(255, 109, 45, 0.22); }
+  50% { box-shadow: 4px 4px 0 rgba(255, 109, 45, 0.45); }
+}
+
 /* ---------- Brand ---------- */
 
 .brand {
