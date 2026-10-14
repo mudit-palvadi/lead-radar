@@ -79,8 +79,11 @@ required — everything else falls back to a working default.
 
 | Variable | Required | What it does |
 |---|---|---|
-| `GROQ_API_KEY` | **Yes** | Groq API key. This is the brain — nothing runs without it. |
-| `GROQ_MODEL` | No | Model ID. Defaults to `gemma2-9b-it` (Google's open-weight Gemma). |
+| `AI_PROVIDER` | No | `ollama` (local) or `groq` (hosted). Defaults to `groq`. |
+| `GROQ_API_KEY` | **Yes** for hosted mode | Groq API key. This is the brain — nothing runs without it. |
+| `GROQ_MODEL` | No | Defaults to `qwen/qwen3.8-27b` (open-weight, 128k context). |
+| `OLLAMA_HOST` | No | Defaults to `http://localhost:11434`. |
+| `OLLAMA_MODEL` | No | Defaults to `qwen3:8b`. Pull it first with `ollama pull qwen3:8b`. |
 | `SERPAPI_KEY` | No | SerpApi key. Without it you get synthetic sample leads; with it, real businesses. |
 | `MONGODB_URI` | No | MongoDB Atlas connection string. Defaults to local `mongodb://localhost:27017/leadradar`. |
 | `TEMPORAL_ADDRESS` | No | Where Temporal lives. Defaults to `localhost:7233` for local dev. |
@@ -98,7 +101,7 @@ required — everything else falls back to a working default.
 
 ```
      ┌─────────────┐     ┌──────────────┐     ┌──────────────┐
-     │   SerpApi   │ ──▶ │   Gemma 2   │ ──▶ │   Outreach   │
+     │   SerpApi   │ ──▶ │   Qwen 3    │ ──▶ │   Outreach   │
      │  (find them)│     │  (read them) │     │ (reach out)  │
      └─────────────┘     └──────┬───────┘     └──────────────┘
                                   │
@@ -113,7 +116,7 @@ required — everything else falls back to a working default.
                          └─────────────────┘
 ```
 
-The whole pipeline runs as one **Temporal** workflow — scan, classify, draft — so a Groq
+The whole pipeline runs as one **Temporal** workflow — scan, classify, draft — so a model
 timeout or a flaky SerpApi call becomes a retry instead of a lost scan. Every lead, score and draft
 is stored in **MongoDB Atlas**, so a scan you ran last week is still there when you come back.
 
