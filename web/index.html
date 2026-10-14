@@ -458,19 +458,28 @@
 
           const data = await response.json();
 
-          if (data.status === 'completed') {
+          const labels = {
+            pending: 'Starting scan...',
+            scanning: 'Finding local businesses...',
+            classifying: 'Reading each business...',
+            drafting: 'Writing outreach emails...'
+          };
+
+          if (data.status === 'complete') {
             spinner.style.display = 'none';
-            statusText.textContent = 'Scan complete!';
+            statusText.textContent = 'Scan complete! ' + (data.leads || []).length + ' leads found.';
             submitBtn.disabled = false;
             submitBtn.textContent = 'New Scan';
             clearInterval(pollInterval);
-            renderResults(data.results || []);
+            renderResults(data.leads || []);
           } else if (data.status === 'failed') {
             spinner.style.display = 'none';
             statusText.textContent = 'Scan failed.';
             submitBtn.disabled = false;
             submitBtn.textContent = 'Try Again';
             clearInterval(pollInterval);
+          } else if (labels[data.status]) {
+            statusText.textContent = labels[data.status];
           }
         } catch (err) {
           // Silent retry on network errors
@@ -491,7 +500,7 @@
           const tr = document.createElement('tr');
 
           const signals = (lead.signals || []).map(function(s) {
-            return '<span class="tag">' + escapeHtml(s) + '</span>';
+            return '<span class="tag">' + escapeHtml(s.description || s.type || '') + '</span>';
           }).join('');
 
           tr.innerHTML =
