@@ -73,6 +73,21 @@ export async function classifyLead(
   }
 }
 
+/**
+ * The model reliably forgets to sign, because "end with a clear ask" competes
+ * with "sign off as Alex" in the same prompt. Rather than fight over the
+ * instructions, check the tail and add the signature ourselves.
+ */
+export function ensureSignOff(body: string, senderName: string): string {
+  const trimmed = (body ?? '').trim();
+  if (!trimmed) return `Best,\n${senderName}`;
+
+  const tail = trimmed.slice(-80).toLowerCase();
+  if (tail.includes(senderName.toLowerCase())) return trimmed;
+
+  return `${trimmed}\n\nBest,\n${senderName}`;
+}
+
 export async function draftOutreachEmail(
   lead: BusinessLead,
   service: string,
@@ -85,7 +100,7 @@ export async function draftOutreachEmail(
     if (!parsed) return fallbackEmail(lead, service, senderName);
     return {
       subject: String(parsed.subject || ''),
-      body: String(parsed.body || ''),
+      body: ensureSignOff(String(parsed.body || ''), senderName),
       tone: parsed.tone ?? 'professional',
     };
   } catch (error) {
@@ -163,7 +178,8 @@ Write a short email, under 120 words, that:
 3. Explains that point in your own words. Never paste these notes into the email, never quote them in brackets or parentheses, and never repeat a fact twice.
 4. Ends with a clear low-friction ask.
 5. Reads like a person writing to another person, not a template.
-${reviews < 5 ? '6. Do not mention reviews or ratings at all in this email.\n' : ''}
+6. Address the business as "you". Never write "they", "their" or "their business".
+${reviews < 5 ? '7. Do not mention reviews or ratings at all in this email.\n' : ''}
 You have NOT visited the website. Never comment on its design, layout or content.
 
 This business is a prospective customer, not a competitor. Never describe it as offering ${service}.
