@@ -1,13 +1,16 @@
 import type { BusinessLead, ScanRequest } from '../types.js';
 import { searchBusinesses } from '../search/serpapi.js';
-import { classifyLead, draftOutreachEmail } from '../ai/index.js';
+import { classifyLead, draftOutreachEmail, identifyBusinessTypes } from '../ai/index.js';
 
 export async function scanBusinesses(request: ScanRequest): Promise<BusinessLead[]> {
-  const leads = await searchBusinesses(
-    request.service,
-    request.location,
-    request.maxLeads,
-  );
+  const types = await identifyBusinessTypes(request.service);
+
+  const query =
+    types.length > 0
+      ? `${types.join(' OR ')} in ${request.location}`
+      : `${request.service} in ${request.location}`;
+
+  const leads = await searchBusinesses(query, request.location, request.maxLeads);
   return leads;
 }
 

@@ -31,6 +31,25 @@ function extractJson(text: string): unknown | null {
   }
 }
 
+export async function identifyBusinessTypes(service: string): Promise<string[]> {
+  try {
+    const prompt = `List the types of local businesses that most often need ${service}.
+
+For example, for "web design" the answer would be restaurants, salons, auto repair shops, dental clinics, gyms, real estate agents, plumbers, electricians, roofers, pet groomers, coffee shops, bakeries.
+
+Return JSON with a single key "types" containing an array of 8-12 business type names (just the type, no explanations). Example: {"types": ["restaurant", "salon"]}`;
+
+    const parsed = extractJson(await getProvider().complete(prompt)) as { types?: unknown } | null;
+    if (!parsed || !Array.isArray(parsed.types)) return [];
+    return (parsed.types as unknown[])
+      .map((t) => String(t).trim().toLowerCase())
+      .filter(Boolean);
+  } catch (error) {
+    console.warn('Business type identification failed:', error instanceof Error ? error.message : error);
+    return [];
+  }
+}
+
 export async function classifyLead(
   lead: Pick<BusinessLead, 'name' | 'address' | 'website' | 'rating' | 'reviewCount' | 'category'>,
   service: string,
