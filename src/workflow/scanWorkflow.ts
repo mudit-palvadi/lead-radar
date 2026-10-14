@@ -4,7 +4,7 @@ import type { BusinessLead, ScanRequest } from '../types.js';
 const { scanBusinesses, classifyLeads, draftEmails } = proxyActivities<{
   scanBusinesses: (req: ScanRequest) => Promise<BusinessLead[]>;
   classifyLeads: (leads: BusinessLead[], service: string) => Promise<BusinessLead[]>;
-  draftEmails: (leads: BusinessLead[], service: string) => Promise<BusinessLead[]>;
+  draftEmails: (leads: BusinessLead[], service: string, senderName: string) => Promise<BusinessLead[]>;
 }>({
   startToCloseTimeout: '10 minutes',
   retry: { maximumAttempts: 3, initialInterval: '1 second' },
@@ -34,7 +34,7 @@ export async function leadRadarScanWorkflow(
   if (cancelled) throw new Error('Scan cancelled');
 
   currentStatus = 'drafting';
-  const withEmails = await draftEmails(classified, request.service);
+  const withEmails = await draftEmails(classified, request.service, request.senderName);
 
   currentStatus = 'complete';
   return withEmails;

@@ -53,7 +53,7 @@ For "${service}", list 8-12 similar local business types. Return JSON with a sin
 }
 
 export async function classifyLead(
-  lead: Pick<BusinessLead, 'name' | 'address' | 'website' | 'rating' | 'reviewCount' | 'category'>,
+  lead: Pick<BusinessLead, 'name' | 'address' | 'website' | 'rating' | 'reviewCount' | 'category' | 'hasWebsite'>,
   service: string,
 ): Promise<ClassificationResult> {
   try {
@@ -77,12 +77,13 @@ export async function classifyLead(
 export async function draftOutreachEmail(
   lead: BusinessLead,
   service: string,
+  senderName = 'Alex',
 ): Promise<EmailDraft> {
   try {
     const parsed = extractJson(
-      await getProvider().complete(buildOutreachPrompt(lead, service), true),
+      await getProvider().complete(buildOutreachPrompt(lead, service, senderName), true),
     ) as EmailDraft | null;
-    if (!parsed) return fallbackEmail(lead, service);
+    if (!parsed) return fallbackEmail(lead, service, senderName);
     return {
       subject: String(parsed.subject || ''),
       body: String(parsed.body || ''),
@@ -90,20 +91,20 @@ export async function draftOutreachEmail(
     };
   } catch (error) {
     console.warn('Email drafting failed:', error instanceof Error ? error.message : error);
-    return fallbackEmail(lead, service);
+    return fallbackEmail(lead, service, senderName);
   }
 }
 
-function fallbackEmail(lead: BusinessLead, service: string): EmailDraft {
+function fallbackEmail(lead: BusinessLead, service: string, senderName: string): EmailDraft {
   return {
-    subject: `Helping ${lead.name} with ${service}`,
-    body: `Hi ${lead.name} team,\n\nI came across your business while looking for ${service} clients in the area, and had a few ideas about how I could help. Would you be open to a quick 10-minute call this week?\n\nBest regards`,
+    subject: `${lead.name} — a ${service} thought`,
+    body: `Hi ${lead.name} team,\n\nI came across your business and had a few ideas about how I could help with ${service}. Would you be open to a quick 10-minute call this week?\n\nBest,\n${senderName}`,
     tone: 'professional',
   };
 }
 
 function buildClassificationPrompt(
-  lead: Pick<BusinessLead, 'name' | 'address' | 'website' | 'rating' | 'reviewCount' | 'category'>,
+  lead: Pick<BusinessLead, 'name' | 'address' | 'website' | 'rating' | 'reviewCount' | 'category' | 'hasWebsite'>,
   service: string,
 ): string {
   return `Classify how likely this business is to need ${service} services.
@@ -111,10 +112,17 @@ function buildClassificationPrompt(
 Business: ${lead.name}
 Address: ${lead.address}
 Category: ${lead.category || 'unknown'}
+hasWebsite: ${lead.hasWebsite ? 'true' : 'false'}
 ${lead.website ? `Website: ${lead.website}` : 'No website found'}
 Google Rating: ${lead.rating || 'N/A'} (${lead.reviewCount || 0} reviews)
 
-Score 0-100 on how badly this business needs ${service}. Use only these three keys:
+Score 0-100 on how badly this business needs ${service}, using these bands:
+- 90-100: active customer-facing business with no website at all
+- 70-89: has a website but it is dated or incomplete
+- 40-69: solid online presence, a modest opportunity
+- 0-39: strong online presence, not a prospect worth contacting
+
+Use only these three keys:
 
 {
   "score": <integer 0-100>,
@@ -128,31 +136,51 @@ Score 0-100 on how badly this business needs ${service}. Use only these three ke
 
 "type" must be one of: no_website, outdated_website, no_google_business, bad_reviews_no_response, no_social_presence.
 "severity" must be the string high, medium, or low — never a number.
-Return only the JSON object, with no text before or after it.`;
+Return only the JSON object, with no text before or after it.
+
+Hard rules:
+- This business came from Google Maps, so it already has a Google Business Profile. NEVER report no_google_business.
+- hasWebsite is ${lead.hasWebsite ? 'true' : 'false'}. If it is true, NEVER report no_website, and never say it has no website.
+- Only report a signal the listed data supports. Do not guess about languages, layout, design or anything not given here.
+- Do not repeat a signal you already listed.`;
 }
 
-function buildOutreachPrompt(lead: BusinessLead, service: string): string {
+function buildOutreachPrompt(
+  lead: BusinessLead,
+  service: string,
+  senderName: string,
+): string {
   const signalSummary = lead.signals
     .map((s) => `- ${s.description} (${s.severity})`)
     .join('\n');
 
-  return `You are writing a personalized outreach email for a freelance ${service} provider.
+  const reviews = lead.reviewCount ?? 0;
+  const reputation = reviews >= 5
+    ? `${lead.rating} stars from ${reviews} reviews`
+    : 'very few public reviews';
+
+  return `You are ${senderName}, a freelance ${service} provider, writing to a potential client.
 
 Business: ${lead.name}
 Location: ${lead.address}
+hasWebsite: ${lead.hasWebsite ? 'true' : 'false'}
 ${lead.website ? `Website: ${lead.website}` : 'No website found'}
-Rating: ${lead.rating || 'N/A'} (${lead.reviewCount || 0} reviews)
+Reputation: ${reputation}
 
-Signals detected:
-${signalSummary}
+Signals already detected (do not repeat or invent others):
+${signalSummary || '- none'}
 
-Write a short, personalized email (under 150 words) that:
-1. References something specific about this business
-2. Mentions the problem you noticed without being condescending
-3. Offers a clear next step (call, meeting, or free audit)
-4. Sounds human, not like a template
+Write a short email, under 120 words, that:
+1. Opens by naming the business directly. Never open with "I hope this email finds you well".
+2. Cites only facts from the list above.${reviews < 5 ? ' This business has very few reviews, so never mention review counts or ratings.' : ''}
+3. States one concrete problem you noticed.
+4. Ends with a clear low-friction ask.
+5. Reads like a person writing to another person, not a template.
+
+This business is a prospective customer, not a competitor. Never describe it as offering ${service}.
+Sign off as ${senderName}. Never write "[Your Name]".
 
 Return only the JSON object, with no text before or after it:
-{ "subject": "<short line>", "body": "<email under 150 words>", "tone": "friendly" }
+{ "subject": "<short line>", "body": "<email under 120 words>", "tone": "friendly" }
 where tone is exactly one of: professional, friendly, direct`;
 }

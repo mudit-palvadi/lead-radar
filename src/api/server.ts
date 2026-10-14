@@ -47,6 +47,7 @@ app.post('/api/scans', async (req, res) => {
       location: parsed.data.location,
       criteria: normalizeCriteria(parsed.data.criteria),
       maxLeads: parsed.data.maxLeads,
+      senderName: parsed.data.senderName,
     },
     leads: [],
     status: 'pending',

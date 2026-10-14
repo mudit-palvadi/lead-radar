@@ -27,6 +27,7 @@ export const ScanRequestSchema = z.object({
     .array(z.enum(CRITERIA_KEYS))
     .default(['noWebsite', 'outdatedWebsite', 'noGoogleBusiness']),
   maxLeads: z.number().int().min(5).max(100).default(50),
+  senderName: z.string().min(1).max(60).default('Alex'),
 });
 
 export type ScanRequest = z.infer<typeof ScanRequestSchema>;

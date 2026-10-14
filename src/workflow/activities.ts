@@ -1,6 +1,25 @@
-import type { BusinessLead, ScanRequest } from '../types.js';
+import type { BusinessLead, LeadSignal, ScanRequest } from '../types.js';
 import { searchBusinesses } from '../search/serpapi.js';
 import { classifyLead, draftOutreachEmail, identifyBusinessTypes } from '../ai/index.js';
+
+/**
+ * SerpApi and the model both report on the same problems, so merging naively
+ * shows the user "No website found" three times. Keep the first report of each
+ * distinct type, in severity order.
+ */
+function mergeSignals(fromSearch: LeadSignal[], fromModel: LeadSignal[]): LeadSignal[] {
+  const seen = new Set<string>();
+  const merged: LeadSignal[] = [];
+
+  for (const signal of [...fromSearch, ...fromModel]) {
+    if (seen.has(signal.type)) continue;
+    seen.add(signal.type);
+    merged.push(signal);
+  }
+
+  const rank = { high: 0, medium: 1, low: 2 } as const;
+  return merged.sort((a, b) => rank[a.severity] - rank[b.severity]);
+}
 
 export async function scanBusinesses(request: ScanRequest): Promise<BusinessLead[]> {
   const serviceWords = new Set(
@@ -33,8 +52,9 @@ export async function classifyLeads(
 ): Promise<BusinessLead[]> {
   const classified: BusinessLead[] = [];
 
-  for (let i = 0; i < leads.length; i += 5) {
-    const batch = leads.slice(i, i + 5);
+  // 3 keeps a batch inside the Groq free tier's per-minute token limit.
+  for (let i = 0; i < leads.length; i += 3) {
+    const batch = leads.slice(i, i + 3);
     const results = await Promise.allSettled(
       batch.map((lead) => classifyLead(lead, service)),
     );
@@ -45,7 +65,7 @@ export async function classifyLeads(
         classified.push({
           ...batch[j],
           score: result.value.score,
-          signals: [...batch[j].signals, ...result.value.signals],
+          signals: mergeSignals(batch[j].signals, result.value.signals),
         });
       } else {
         classified.push({
@@ -63,14 +83,15 @@ export async function classifyLeads(
 export async function draftEmails(
   leads: BusinessLead[],
   service: string,
+  senderName = 'Alex',
 ): Promise<BusinessLead[]> {
   const topLeads = leads.slice(0, 10);
   const drafted: BusinessLead[] = [];
 
-  for (let i = 0; i < topLeads.length; i += 3) {
-    const batch = topLeads.slice(i, i + 3);
+  for (let i = 0; i < topLeads.length; i += 2) {
+    const batch = topLeads.slice(i, i + 2);
     const results = await Promise.allSettled(
-      batch.map((lead) => draftOutreachEmail(lead, service)),
+      batch.map((lead) => draftOutreachEmail(lead, service, senderName)),
     );
 
     for (let j = 0; j < batch.length; j++) {
