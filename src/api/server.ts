@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { v4 as uuidv4 } from 'uuid';
 import { WorkflowClient } from '@temporalio/client';
 import { config } from '../config.js';
@@ -12,6 +14,10 @@ import { getConnection } from '../temporal.js';
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Works from src/api (tsx) and dist/api (compiled) alike.
+const webDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../web');
+app.use(express.static(webDir));
 
 let workflowClient: WorkflowClient | null = null;
 

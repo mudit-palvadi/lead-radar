@@ -12,6 +12,7 @@ RUN npm ci
 # Copy source code
 COPY tsconfig.json ./
 COPY src ./src
+COPY web ./web
 
 # Compile TypeScript
 RUN npm run build
@@ -29,6 +30,9 @@ RUN npm ci --omit=dev && npm cache clean --force
 
 # Copy compiled JavaScript from builder
 COPY --from=builder /app/dist ./dist
+
+# The frontend is served by Express, so it must ship with the image
+COPY --from=builder /app/web ./web
 
 # Expose the app port
 EXPOSE 3000
