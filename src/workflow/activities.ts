@@ -21,17 +21,49 @@ export function scoreLead(lead: BusinessLead, modelScore: number): number {
   return clamp(Math.round(blended), 0, 100);
 }
 
-export async function scanBusinesses(request: ScanRequest): Promise<BusinessLead[]> {
+/**
+ * Drops business types that are the freelancer's own trade or close peers.
+ * "design studio" does not contain the word "designer", so exact word matching
+ * alone lets competitors through; prefix matching catches "design" inside
+ * "designer". Agency and consultant roles never make good prospects for any
+ * trade, but "studio" stays allowed because a yoga studio or recording studio
+ * is a normal client.
+ */
+export function dropPeerTypes(types: string[], service: string): string[] {
   const serviceWords = new Set(
-    request.service.toLowerCase().split(/\s+/).filter((w) => w.length > 2),
+    service.toLowerCase().split(/\s+/).filter((w) => w.length > 2),
   );
+  const peerWords = new Set([
+    'agency',
+    'agencies',
+    'consultant',
+    'consultants',
+    'consulting',
+    'consultancy',
+    'freelance',
+    'freelancer',
+    'freelancers',
+  ]);
 
-  // Drop any type that restates the freelancer's own trade (e.g. "web design",
-  // "web design company") — those are competitors, not prospects.
-  const types = (await identifyBusinessTypes(request.service)).filter((type) => {
+  return types.filter((type) => {
     const words = type.split(/\s+/);
-    return !words.some((w) => serviceWords.has(w));
+    const sameTrade = words.some(
+      (w) =>
+        serviceWords.has(w) ||
+        (w.length >= 4 &&
+          [...serviceWords].some(
+            (sw) => sw.length >= 6 && (sw.startsWith(w) || w.startsWith(sw)),
+          )),
+    );
+    return !sameTrade && !words.some((w) => peerWords.has(w));
   });
+}
+
+export async function scanBusinesses(request: ScanRequest): Promise<BusinessLead[]> {
+  // Drop any type that restates or closely resembles the freelancer's own
+  // trade (e.g. "web design", "design studio") — those are competitors, not
+  // prospects.
+  const types = dropPeerTypes(await identifyBusinessTypes(request.service), request.service);
 
   const query =
     types.length > 0

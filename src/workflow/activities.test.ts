@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { scoreLead } from './activities.js';
+import { scoreLead, dropPeerTypes } from './activities.js';
 import type { BusinessLead } from '../types.js';
 
 const lead = (signals: string[]): BusinessLead =>
@@ -52,5 +52,44 @@ describe('scoreLead', () => {
 
   it('handles a lead with no signals at all', () => {
     expect(Number.isFinite(scoreLead(lead([]), 50))).toBe(true);
+  });
+});
+
+describe('dropPeerTypes', () => {
+  it('drops a design studio when the trade is graphic designer', () => {
+    // "design studio" does not contain the word "designer".
+    expect(
+      dropPeerTypes(['coffee shop', 'design studio', 'gym'], 'graphic designer'),
+    ).toEqual(['coffee shop', 'gym']);
+  });
+
+  it('drops the exact trade wording', () => {
+    expect(
+      dropPeerTypes(['web design', 'restaurant', 'salon'], 'web developer'),
+    ).toEqual(['restaurant', 'salon']);
+  });
+
+  it('drops agencies and consultants for any trade', () => {
+    expect(
+      dropPeerTypes(['marketing agency', 'restaurant', 'consulting firm'], 'content writer'),
+    ).toEqual(['restaurant']);
+  });
+
+  it('keeps a yoga studio, because a studio is only a peer of its own trade', () => {
+    expect(
+      dropPeerTypes(['yoga studio', 'coffee shop'], 'social media marketer'),
+    ).toEqual(['yoga studio', 'coffee shop']);
+  });
+
+  it('keeps ordinary client businesses for a graphic designer', () => {
+    const kept = dropPeerTypes(
+      ['coffee shop', 'food truck', 'real estate agent', 'wedding venue', 'boutique'],
+      'graphic designer',
+    );
+    expect(kept).toHaveLength(5);
+  });
+
+  it('returns an empty list unchanged', () => {
+    expect(dropPeerTypes([], 'web developer')).toEqual([]);
   });
 });

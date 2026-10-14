@@ -33,19 +33,29 @@ function extractJson(text: string): unknown | null {
 
 export async function identifyBusinessTypes(service: string): Promise<string[]> {
   try {
-    const prompt = `List the types of local, consumer-facing businesses that most often need ${service}.
+    const prompt = `List the types of local businesses that would realistically hire an outside freelancer for ${service}.
 
-These must be physical local businesses that serve individual customers — NOT business services, consultants, agencies, or companies that provide ${service} themselves. Never include a business type that offers ${service}.
+Rules:
+- Independent local businesses whose owner would pay for this work themselves
+- Never include a business type that provides ${service} itself: no agencies, consultants, or freelancers selling this kind of work
+- Choose businesses whose brand, reputation, or customers depend on this work
 
-For example, for "web design" the answer is: restaurant, salon, auto repair shop, dental clinic, gym, real estate agent, plumber, electrician, roofer, pet groomer, coffee shop, bakery.
+Examples of good answers:
+- "web design": restaurant, salon, auto repair shop, dental clinic, gym, real estate agent, plumber, electrician, roofer, coffee shop, bakery, pet groomer
+- "graphic designer": coffee shop, bakery, restaurant, bar, food truck, real estate agent, gym, salon, event planner, wedding venue, car dealership, boutique
+- "social media marketing": boutique, coffee shop, restaurant, gym, yoga studio, salon, bar, brewery, bakery, food truck, barbershop, florist
 
-For "${service}", list 8-12 similar local business types. Return JSON with a single key "types" containing an array of business type names (lowercase, no explanations). Example: {"types": ["restaurant", "salon"]}`;
+For "${service}", list 8-12 distinct local business types, no repeats. Return JSON with a single key "types" containing an array of business type names (lowercase, no explanations). Example: {"types": ["restaurant", "salon"]}`;
 
     const parsed = extractJson(await getProvider().complete(prompt, true)) as { types?: unknown } | null;
     if (!parsed || !Array.isArray(parsed.types)) return [];
-    return (parsed.types as unknown[])
-      .map((t) => String(t).trim().toLowerCase())
-      .filter(Boolean);
+    return [
+      ...new Set(
+        (parsed.types as unknown[])
+          .map((t) => String(t).trim().toLowerCase())
+          .filter(Boolean),
+      ),
+    ];
   } catch (error) {
     console.warn('Business type identification failed:', error instanceof Error ? error.message : error);
     return [];
