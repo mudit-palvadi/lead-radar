@@ -47,10 +47,10 @@ You tell it two things: **what you do** and **where you do it**. LeadRadar handl
 care about open-source AI.
 
 <div align="center">
-  <img src="docs/images/scan-form.svg" alt="The scan form" width="640"/>
-  <p><sub><em>The form. Two fields, four checkboxes, one button.</em></sub></p>
+  <img src="docs/images/landing-hero.png" alt="The LeadRadar landing page" width="800"/>
+  <p><sub><em>The landing page. One button between you and your first list.</em></sub></p>
   <br/>
-  <img src="docs/images/results-table.svg" alt="The results table with drafted outreach" width="640"/>
+  <img src="docs/images/scanner-results.png" alt="Ranked leads with scores, signals and drafted outreach" width="800"/>
   <p><sub><em>Results. Ranked, explained, and one email away from a real conversation.</em></sub></p>
 </div>
 
@@ -59,6 +59,25 @@ care about open-source AI.
 ## Demo
 
 > **Live:** `https://leadradar-7ukg.onrender.com` — deployed on Render. Try a scan for `Web Development` in your own city.
+
+### Screenshots
+
+Captured from the live deployment: a real `Web Development` scan in `Austin, TX`, 10 leads, done in 1:22.
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/scanner-form.png" alt="The scan form"/><br/><sub><em>The form. Service, city, your name, and what to look for.</em></sub></td>
+    <td width="50%"><img src="docs/images/scanner-progress.png" alt="A scan in progress"/><br/><sub><em>A scan in progress. Each step lights up as the workflow moves.</em></sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/images/scanner-email.png" alt="A drafted outreach email"/><br/><sub><em>The draft for the top lead, built on the one fact it found and signed with your name.</em></sub></td>
+    <td width="50%"><img src="docs/images/landing-how-it-works.png" alt="How it works"/><br/><sub><em>How it works, from the landing page.</em></sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/images/landing-features.png" alt="Features"/><br/><sub><em>What's under the hood.</em></sub></td>
+    <td width="50%" align="center"><img src="docs/images/mobile-landing.png" alt="The landing page on a phone" width="220"/><br/><sub><em>Works on a phone, too.</em></sub></td>
+  </tr>
+</table>
 
 ```bash
 # Run it locally — three terminals, this order
