@@ -58,7 +58,7 @@ care about open-source AI.
 
 ## Demo
 
-> **Live:** `[your-app].onrender.com` — deployed on Render. Try a scan for `Web Development` in your own city.
+> **Live:** `https://leadradar-7ukg.onrender.com` — deployed on Render. Try a scan for `Web Development` in your own city.
 
 ```bash
 # Run it locally — three terminals, this order
