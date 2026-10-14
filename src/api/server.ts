@@ -19,6 +19,12 @@ app.use(express.json());
 const webDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../web');
 app.use(express.static(webDir, { extensions: ['html'] }));
 
+// express.static's `extensions` option resolves /index -> index.html but has
+// no way to map a differently named path, so /app needs an explicit route.
+app.get('/app', (_req, res) => {
+  res.sendFile(path.join(webDir, 'app.html'));
+});
+
 let workflowClient: WorkflowClient | null = null;
 
 async function getWorkflowClient(): Promise<WorkflowClient> {
