@@ -66,6 +66,14 @@ describe('cleanEmailBody', () => {
   it('never returns an empty string when given a non-empty body', () => {
     expect(cleanEmailBody("I haven't checked anything.").length).toBeGreaterThan(0);
   });
+
+  it('strips the "hope this email finds you well" filler opener', () => {
+    const result = cleanEmailBody(
+      'Dear Auto. I hope this email finds you well. I can help with marketing.',
+    );
+    expect(result).not.toMatch(/hope this email finds you well/i);
+    expect(result).toContain('marketing');
+  });
 });
 
 describe('pitchGuidance', () => {
@@ -83,6 +91,35 @@ describe('pitchGuidance', () => {
   it('tells anyone with an existing-site lead not to pitch building one', () => {
     for (const service of ['social media marketing', 'Web Development']) {
       expect(pitchGuidance(service, true)).toMatch(/already has a website/i);
+    }
+  });
+
+  it('gives a content writer a publishing angle, not a building angle', () => {
+    const guidance = pitchGuidance('content writing', false);
+    expect(guidance).not.toMatch(/offering to build one is the natural pitch/i);
+    expect(guidance).toMatch(/content writer/i);
+    expect(guidance).toMatch(/content writing/);
+  });
+
+  it('gives a graphic designer an identity angle, not a building angle', () => {
+    const guidance = pitchGuidance('graphic design', false);
+    expect(guidance).not.toMatch(/offering to build one is the natural pitch/i);
+    expect(guidance).toMatch(/graphic designer/i);
+    expect(guidance).toMatch(/graphic design/);
+  });
+
+  it('never tells any non-web trade that building is the natural pitch', () => {
+    for (const service of [
+      'content writing',
+      'graphic design',
+      'social media marketing',
+      'copywriting',
+      'photography',
+      'SEO consulting',
+    ]) {
+      expect(pitchGuidance(service, false)).not.toMatch(
+        /offering to build one is the natural pitch/i,
+      );
     }
   });
 });

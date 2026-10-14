@@ -97,38 +97,44 @@ export function ensureSignOff(body: string, senderName: string): string {
 export function cleanEmailBody(body: string): string {
   const confession =
     /\s*[^.!?]*\b(i\s+(have\s*(not|n'?t)|has\s*(not|n'?t)|did\s*(not|n'?t)|could\s*(not|n'?t)|ca\s*(not|n'?t)|was\s*(not|n'?t)|were\s*(not|n'?t)|had\s*(not|n'?t))|i\s+am\s+unable\s+to|i\s+do\s*not\s+have\s+access\s+to)[^.!?]*[.!?]/gi;
-  const cleaned = (body ?? '').replace(confession, '').replace(/\n{3,}/g, '\n\n').trim();
+  const filler =
+    /\s*I hope this email finds you well[,.]?\s*/gi;
+  const cleaned = (body ?? '')
+    .replace(confession, '')
+    .replace(filler, ' ')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
   return cleaned || (body ?? '').trim();
 }
 
 /**
- * The old prompt told every freelancer "offering to build one is the natural
- * pitch" whenever a lead had no website — so a social media marketer ended up
- * pitching websites. The pitch must always be the user's own service.
+ * Connect the observed fact to the freelancer's own trade. The old version
+ * hardcoded a web-developer pitch ("offering to build one is the natural
+ * pitch"), so every trade ended up selling websites. Instead, spell out how
+ * the same fact means different things for different trades, and forbid
+ * selling anything but the stated service.
  */
 export function pitchGuidance(service: string, hasWebsite: boolean): string {
   const offersWeb = /\bweb(?:site)?s?\b|\bsite\b|\bweb\s*dev|\bfront-?end\b/i.test(service);
 
-  if (!hasWebsite && !offersWeb) {
-    return (
-      `This business has no website. That is context, NOT your pitch. ` +
-      `You do ${service} — you do not build websites. Never offer to build, design, ` +
-      `redesign, or "create" a website. Instead, frame the missing website as the ` +
-      `visibility problem your service solves (customers searching for them find ` +
-      `nothing; competitors show up first), and pitch ${service} as the fix.`
-    );
-  }
-  if (!hasWebsite && offersWeb) {
-    return (
-      `This business has no website, and your service is ${service}, so offering ` +
-      `to build one is the natural pitch.`
-    );
-  }
-  return (
+  const noSite =
+    `This business has no website. How that matters depends on your trade: ` +
+    `a web developer builds it; a content writer gives them words worth publishing; ` +
+    `a graphic designer gives them an identity worth showing; a social media marketer ` +
+    `makes them discoverable where customers already search. ` +
+    `You do ${service} — pitch ${service} through that lens. ` +
+    `Never offer to build, design, redesign, or "create" a website unless ${service} itself is web work.`;
+
+  const hasSite =
     `This business already has a website. Never offer to build them one or tell ` +
     `them they need an online presence. Pitch ${service} as the way to get more ` +
-    `out of what they already have.`
-  );
+    `out of what they already have.`;
+
+  if (!hasWebsite) return offersWeb
+    ? `This business has no website, and your service is ${service}, so offering to build one is the natural pitch.`
+    : noSite;
+  return hasSite;
 }
 
 export async function draftOutreachEmail(
@@ -174,10 +180,15 @@ ${lead.website ? `Website: ${lead.website}` : 'No website found'}
 Google Rating: ${lead.rating || 'N/A'} (${lead.reviewCount || 0} reviews)
 
 Score 0-100 on how badly this business needs ${service}, using these bands:
-- 90-100: active customer-facing business with no website at all
-- 70-89: weak online presence, worth a conversation
-- 40-69: some presence, a modest opportunity
-- 0-39: strong online presence, not a prospect worth contacting
+- 90-100: strong, direct evidence this business needs ${service}
+- 70-89: a clear opportunity for ${service}, worth a conversation
+- 40-69: a modest fit for ${service}
+- 0-39: a weak fit for ${service}, not worth contacting
+
+Read the evidence through the lens of ${service}. A missing website matters differently
+for different trades: for web development it is the job itself; for content writing it
+means nowhere to publish; for graphic design it means no place to show work; for social
+media marketing it means invisibility where customers search. Score the fit, not the website.
 
 Return only the JSON object, with no text before or after it:
 
@@ -218,13 +229,16 @@ ${hook ? `The one thing worth mentioning: ${hook}.` : 'Nothing stands out about 
 Write a short email, under 120 words, that:
 1. Opens by naming the business directly. Never open with "I hope this email finds you well".
 2. Build on that one thing. Never bring up a second problem, and never mention anything else from the list above.
-3. Explains that point in your own words. Never paste these notes into the email, never quote them in brackets or parentheses, and never repeat a fact twice.
-4. Ends with a clear low-friction ask.
-5. Reads like a person writing to another person, not a template.
-6. Address the business as "you". Never write "they", "their" or "their business".
-7. ${pitchGuidance(service, lead.hasWebsite)}
-8. Your ONLY offer is ${service}. Never offer web design, web development, SEO, logo design, or any other service — even if the business seems to need it.
-${reviews < 5 ? '9. Do not mention reviews or ratings at all in this email.\n' : ''}
+3. In one sentence, say why that fact matters for ${service} specifically — not for business in general. A content writer talks about words and stories, a designer about image and first impressions, a marketer about being found. Write from inside your trade.
+4. Explain that point in your own words. Never paste these notes into the email, never quote them in brackets or parentheses, and never repeat a fact twice.
+5. Ends with a clear low-friction ask.
+6. Reads like a person writing to another person, not a template.
+7. Address the business as "you". Never write "they", "their" or "their business".
+8. ${pitchGuidance(service, lead.hasWebsite)}
+9. Your ONLY offer is ${service}. Never offer web design, web development, SEO, logo design, or any other service — even if the business seems to need it.
+10. Never claim to have researched the business, looked at their social media, or know whether they use social media. You have no social media data — do not invent any.
+11. Refer to their website only as "your website". Never paste a URL into the email, and never describe the website as good, bad, adequate, or serving its purpose.
+${reviews < 5 ? '12. Do not mention reviews or ratings at all in this email.\n' : ''}
 Never describe or judge the website's design, layout, content, or age — simply do not bring those topics up at all. Never mention what you have or have not checked, visited, or reviewed; just write about the business.
 
 This business is a prospective customer, not a competitor. Never describe it as offering ${service}.
