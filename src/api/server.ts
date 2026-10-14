@@ -7,7 +7,7 @@ import { WorkflowClient } from '@temporalio/client';
 import { config } from '../config.js';
 import { ScanRequestSchema, normalizeCriteria } from '../types.js';
 import { ScanModel } from '../db/models.js';
-import { connectDatabase } from '../db/connection.js';
+import { connectDatabase, isDatabaseReady } from '../db/connection.js';
 import { leadRadarScanWorkflow } from '../workflow/scanWorkflow.js';
 import { getConnection } from '../temporal.js';
 
@@ -39,6 +39,11 @@ async function getWorkflowClient(): Promise<WorkflowClient> {
 }
 
 app.post('/api/scans', async (req, res) => {
+  if (!isDatabaseReady()) {
+    res.status(503).json({ error: 'Database is still connecting. Try again in a moment.' });
+    return;
+  }
+
   const parsed = ScanRequestSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: 'Invalid request', details: parsed.error.errors });
@@ -84,6 +89,11 @@ app.post('/api/scans', async (req, res) => {
 });
 
 app.get('/api/scans/:id', async (req, res) => {
+  if (!isDatabaseReady()) {
+    res.status(503).json({ error: 'Database is still connecting. Try again in a moment.' });
+    return;
+  }
+
   const scan = await ScanModel.findOne({ scanId: req.params.id });
   if (!scan) {
     res.status(404).json({ error: 'Scan not found' });
@@ -153,11 +163,33 @@ async function sweepStaleScans(): Promise<void> {
   }
 }
 
+/**
+ * The API listens before this runs, so a slow or missing database delays
+ * scans, never the deploy. Render only checks that the port answers; retrying
+ * here means a bad minute for Mongo costs a scan attempt, not the service.
+ */
+async function connectWithRetry(): Promise<void> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await connectDatabase();
+      return;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`[db] connect attempt ${attempt} failed (${message.slice(0, 120)}); retrying in 15s`);
+      await new Promise((resolve) => setTimeout(resolve, 15_000));
+    }
+  }
+}
+
 async function start(): Promise<void> {
-  await connectDatabase();
+  // Health checks decide whether the deploy lives or dies, and /api/health
+  // needs no database. Binding the port first keeps the boot order honest:
+  // the database connects in the background instead of gating the listener.
   app.listen(config.port, () => {
     console.log(`LeadRadar API listening on port ${config.port}`);
   });
+
+  connectWithRetry();
 
   sweepStaleScans().catch(() => {});
   setInterval(() => {
