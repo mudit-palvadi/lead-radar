@@ -27,7 +27,7 @@ export async function searchBusinesses(
     return generateSampleLeads(query, location, maxResults);
   }
 
-  const searchQuery = `${query} in ${location}`;
+  const searchQuery = `${location} local businesses`;
   const url = new URL('https://serpapi.com/search.json');
   url.searchParams.set('engine', 'google_maps');
   url.searchParams.set('q', searchQuery);
