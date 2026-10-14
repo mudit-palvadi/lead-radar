@@ -36,13 +36,12 @@ So I built LeadRadar, and gave it the boring half of his job.
 You tell it two things: **what you do** and **where you do it**. LeadRadar handles the rest.
 
 1. **Finds local businesses** through SerpApi — real Google Maps data, not stale directories.
-2. **Reads each one like a prospector would.** The model scores every business 0–100 on how badly
-   they need your service, and says *why*: no website, a broken one, a 9-review shop that never
-   replies, an empty Google Business profile.
+2. **Reads each one like a prospector would.** It checks for a missing website and a poor review
+   history, scores every business 0–100 on how badly they need your service, and says *why*.
 3. **Ranks the list** so the strongest leads sit at the top.
 4. **Writes the first email.** For the top ten, it drafts something specific — not "Dear business
-   owner, I noticed you could benefit from web design services." It mentions the 4.6 stars, the
-   missing website, the exact problem it spotted. Something you'd actually be OK sending.
+   owner, I noticed you could benefit from web design services." It mentions the missing website,
+   the 4.6 stars, the one concrete problem it spotted. Something you'd actually be OK sending.
 
 **The interesting part:** the reason this is *possible* for a freelancer is the same reason judges
 care about open-source AI.
@@ -157,12 +156,26 @@ src/ai/
 
 ---
 
+## What it doesn't know
+
+The score and the signals on each lead are **not** the model guessing. LeadRadar only holds what
+Google Maps actually returned — a name, an address, a website URL, a rating, a review count — and it
+never opens the website. So:
+
+- A lead is scored from the facts we really have (no website, poor reviews), with the model's
+  judgement blended in as a tiebreaker.
+- Signals are computed in code from that data, never written by the model. An earlier version asked
+  the model to report its own signals, and it cheerfully labelled businesses as having "no website"
+  while their URL sat in the same record.
+- The model is never asked to comment on a website's design, age or content, because it hasn't
+  looked. That's why `outdatedWebsite` currently finds nothing — and it's the next thing to build.
+
 ## Performance, honestly
 
 The first scan is slower than it should be only in the sense that it makes a few cold calls: each
 lead is scored, then the top ten get an email. Groq answers in well under a second.
 
-Classification runs in **batches of five**, email drafting in **threes**, so a scan finishes in
+Classification runs in **batches of three**, email drafting in **twos**, so a scan finishes in
 roughly the time of its slowest call — not the sum of all of them. If one lead's call fails, `Promise.allSettled`
 means the other nineteen still land in your table.
 

@@ -2,6 +2,25 @@ import type { BusinessLead, ScanRequest } from '../types.js';
 import { searchBusinesses } from '../search/serpapi.js';
 import { classifyLead, draftOutreachEmail, identifyBusinessTypes } from '../ai/index.js';
 
+const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
+
+/**
+ * Signals are verified facts, so they carry most of the score. The model only
+ * breaks ties: asked to score on its own it returned 70 for every lead, whether
+ * or not the business had a website.
+ */
+export function scoreLead(lead: BusinessLead, modelScore: number): number {
+  const has = (type: string) => lead.signals.some((s) => s.type === type);
+
+  // Every local business is at least a possible client.
+  let base = 30;
+  if (has('no_website')) base += 55;
+  if (has('bad_reviews_no_response')) base += 15;
+
+  const blended = base * 0.75 + clamp(modelScore, 0, 100) * 0.25;
+  return clamp(Math.round(blended), 0, 100);
+}
+
 export async function scanBusinesses(request: ScanRequest): Promise<BusinessLead[]> {
   const serviceWords = new Set(
     request.service.toLowerCase().split(/\s+/).filter((w) => w.length > 2),
@@ -45,7 +64,7 @@ export async function classifyLeads(
       if (result.status === 'fulfilled') {
         classified.push({
           ...batch[j],
-          score: result.value.score,
+          score: scoreLead(batch[j], result.value.score),
           // Signals come straight from the search data and are never second-
           // guessed, so they can't contradict the record they sit beside.
           signals: batch[j].signals,

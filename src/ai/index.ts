@@ -138,17 +138,15 @@ function buildOutreachPrompt(
 ): string {
   const reviews = lead.reviewCount ?? 0;
 
-  // Only offer reputation as a fact when it's substantial. Describing a thin
-  // review count just makes the model write "given your few reviews".
-  const reputation =
-    reviews >= 5 && lead.rating
-      ? `${lead.rating} stars from ${reviews} reviews`
-      : 'not enough public reviews to be worth citing';
-
-  const facts: string[] = [];
-  if (!lead.hasWebsite) facts.push('it has no website of its own');
-  if (reviews >= 5 && lead.rating) facts.push(`it has ${lead.rating} stars from ${reviews} reviews`);
-  if (lead.category) facts.push(`it is a ${lead.category}`);
+  // Handing the model a menu made it pick two and write both into the email.
+  // Give it exactly one thing worth saying and let it put that in its own words.
+  const hook = !lead.hasWebsite
+    ? 'it has no website of its own'
+    : reviews >= 5 && lead.rating
+      ? `it has ${lead.rating} stars from ${reviews} reviews`
+      : lead.category
+        ? `it is a ${lead.category} business`
+        : null;
 
   return `You are ${senderName}, a freelance ${service} provider, writing to a potential client.
 
@@ -156,13 +154,12 @@ What you know about this business:
 - Name: ${lead.name}
 - Location: ${lead.address}${lead.category ? `\n- Trade: ${lead.category}` : ''}
 - Website: ${lead.website || 'none'}
-- Reputation: ${reputation}
 
-${facts.length > 0 ? `Things worth mentioning: ${facts.join('; ')}.` : 'Nothing stands out about this business online.'}
+${hook ? `The one thing worth mentioning: ${hook}.` : 'Nothing stands out about this business online, so keep the email short and general.'}
 
 Write a short email, under 120 words, that:
 1. Opens by naming the business directly. Never open with "I hope this email finds you well".
-2. Mentions at most ONE of the things above. Never mention more than one problem.
+2. Build on that one thing. Never bring up a second problem, and never mention anything else from the list above.
 3. Explains that point in your own words. Never paste these notes into the email, never quote them in brackets or parentheses, and never repeat a fact twice.
 4. Ends with a clear low-friction ask.
 5. Reads like a person writing to another person, not a template.
