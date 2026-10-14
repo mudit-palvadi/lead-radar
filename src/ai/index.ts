@@ -128,18 +128,17 @@ Use only these three keys:
   "score": <integer 0-100>,
   "signals": [
     { "type": "no_website", "description": "<short reason>", "severity": "high" },
-    { "type": "outdated_website", "description": "<short reason>", "severity": "medium" },
-    { "type": "no_google_business", "description": "<short reason>", "severity": "low" }
+    { "type": "outdated_website", "description": "<short reason>", "severity": "medium" }
   ],
   "reasoning": "<one sentence>"
 }
 
-"type" must be one of: no_website, outdated_website, no_google_business, bad_reviews_no_response, no_social_presence.
+"type" must be one of: no_website, outdated_website, bad_reviews_no_response, no_social_presence.
 "severity" must be the string high, medium, or low — never a number.
 Return only the JSON object, with no text before or after it.
 
 Hard rules:
-- This business came from Google Maps, so it already has a Google Business Profile. NEVER report no_google_business.
+- This business came from Google Maps, so it already has a Google Business Profile. Never mention its Google listing at all.
 - hasWebsite is ${lead.hasWebsite ? 'true' : 'false'}. If it is true, NEVER report no_website, and never say it has no website.
 - Only report a signal the listed data supports. Do not guess about languages, layout, design or anything not given here.
 - Do not repeat a signal you already listed.`;

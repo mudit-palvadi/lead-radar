@@ -12,6 +12,9 @@ function mergeSignals(fromSearch: LeadSignal[], fromModel: LeadSignal[]): LeadSi
   const merged: LeadSignal[] = [];
 
   for (const signal of [...fromSearch, ...fromModel]) {
+    // Every lead comes from Google Maps, so it already has a listing. Small
+    // models keep inventing this one, and it is never true.
+    if (signal.type === 'no_google_business') continue;
     if (seen.has(signal.type)) continue;
     seen.add(signal.type);
     merged.push(signal);
