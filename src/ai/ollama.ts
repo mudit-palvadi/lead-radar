@@ -6,7 +6,7 @@ export class OllamaProvider implements AIProvider {
   readonly name = 'ollama';
   readonly isLocal = true;
 
-  async complete(prompt: string): Promise<string> {
+  async complete(prompt: string, json = false): Promise<string> {
     const response = await fetch(`${config.ai.ollama.host}/api/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -14,7 +14,8 @@ export class OllamaProvider implements AIProvider {
         model: config.ai.ollama.model,
         prompt,
         stream: false,
-        options: { temperature: 0 },
+        format: json ? 'json' : undefined,
+        options: { temperature: 0, num_predict: 700 },
       }),
     });
 

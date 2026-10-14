@@ -38,13 +38,20 @@ export class GroqProvider implements AIProvider {
   readonly name = 'groq';
   readonly isLocal = false;
 
-  async complete(prompt: string): Promise<string> {
-    const data = (await (await fetchWithRetry({
+  async complete(prompt: string, json = false): Promise<string> {
+    const payload: Record<string, unknown> = {
       model: config.ai.groq.model,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0,
-      max_tokens: 256,
-    })).json()) as { choices?: Array<{ message?: { content?: string } }> };
+      max_tokens: 700,
+    };
+
+    // Without this the model prefixes prose and the JSON gets truncated.
+    if (json) payload.response_format = { type: 'json_object' };
+
+    const data = (await (await fetchWithRetry(payload)).json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
 
     return data.choices?.[0]?.message?.content ?? '';
   }

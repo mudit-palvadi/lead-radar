@@ -41,7 +41,7 @@ For example, for "web design" the answer is: restaurant, salon, auto repair shop
 
 For "${service}", list 8-12 similar local business types. Return JSON with a single key "types" containing an array of business type names (lowercase, no explanations). Example: {"types": ["restaurant", "salon"]}`;
 
-    const parsed = extractJson(await getProvider().complete(prompt)) as { types?: unknown } | null;
+    const parsed = extractJson(await getProvider().complete(prompt, true)) as { types?: unknown } | null;
     if (!parsed || !Array.isArray(parsed.types)) return [];
     return (parsed.types as unknown[])
       .map((t) => String(t).trim().toLowerCase())
@@ -57,7 +57,9 @@ export async function classifyLead(
   service: string,
 ): Promise<ClassificationResult> {
   try {
-    const parsed = extractJson(await getProvider().complete(buildClassificationPrompt(lead, service))) as ClassificationResult | null;
+    const parsed = extractJson(
+      await getProvider().complete(buildClassificationPrompt(lead, service), true),
+    ) as ClassificationResult | null;
     if (!parsed) {
       return { score: 50, signals: [], reasoning: 'Could not parse classification result.' };
     }
@@ -78,7 +80,7 @@ export async function draftOutreachEmail(
 ): Promise<EmailDraft> {
   try {
     const parsed = extractJson(
-      await getProvider().complete(buildOutreachPrompt(lead, service)),
+      await getProvider().complete(buildOutreachPrompt(lead, service), true),
     ) as EmailDraft | null;
     if (!parsed) return fallbackEmail(lead, service);
     return {
@@ -112,13 +114,21 @@ Category: ${lead.category || 'unknown'}
 ${lead.website ? `Website: ${lead.website}` : 'No website found'}
 Google Rating: ${lead.rating || 'N/A'} (${lead.reviewCount || 0} reviews)
 
-Rate 0-100 based on:
-- Missing or outdated web presence
-- Signs they serve customers but lack professional ${service}
-- Negative reviews suggesting unmet needs
-- No Google Business profile
+Score 0-100 on how badly this business needs ${service}. Use only these three keys:
 
-Return JSON with keys: score, signals (array of {type, description, severity}), reasoning`;
+{
+  "score": <integer 0-100>,
+  "signals": [
+    { "type": "no_website", "description": "<short reason>", "severity": "high" },
+    { "type": "outdated_website", "description": "<short reason>", "severity": "medium" },
+    { "type": "no_google_business", "description": "<short reason>", "severity": "low" }
+  ],
+  "reasoning": "<one sentence>"
+}
+
+"type" must be one of: no_website, outdated_website, no_google_business, bad_reviews_no_response, no_social_presence.
+"severity" must be the string high, medium, or low — never a number.
+Return only the JSON object, with no text before or after it.`;
 }
 
 function buildOutreachPrompt(lead: BusinessLead, service: string): string {
@@ -142,5 +152,7 @@ Write a short, personalized email (under 150 words) that:
 3. Offers a clear next step (call, meeting, or free audit)
 4. Sounds human, not like a template
 
-Return JSON with keys: subject, body, tone (one of: professional, friendly, direct)`;
+Return only the JSON object, with no text before or after it:
+{ "subject": "<short line>", "body": "<email under 150 words>", "tone": "friendly" }
+where tone is exactly one of: professional, friendly, direct`;
 }
