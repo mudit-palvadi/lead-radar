@@ -1069,27 +1069,15 @@
       observer.observe(el);
     });
 
-    // Marquee slide on scroll
+    // Marquee: always animating, pauses on hover
     const marquee = document.querySelector('.marquee-track');
-    let marqueePaused = false;
 
     document.querySelector('.marquee').addEventListener('mouseenter', () => {
-      marqueePaused = true;
+      marquee.style.animationPlayState = 'paused';
     });
     document.querySelector('.marquee').addEventListener('mouseleave', () => {
-      marqueePaused = false;
+      marquee.style.animationPlayState = 'running';
     });
-
-    // Pause marquee when not in viewport
-    const marqueeObserver = new IntersectionObserver(
-      ([entry]) => {
-        if (marquee) {
-          marquee.style.animationPlayState = entry.isIntersecting && !marqueePaused ? 'running' : 'paused';
-        }
-      },
-      { threshold: 0 }
-    );
-    marqueeObserver.observe(document.querySelector('.marquee'));
 
     // Button micro-interaction: subtle scale on click
     document.querySelectorAll('.btn').forEach((btn) => {
