@@ -61,16 +61,16 @@
 
     .hero h1 {
       font-family: var(--font-display);
-      font-size: clamp(2.6rem, 5.6vw, 4.6rem);
-      line-height: 1.02;
-      letter-spacing: -1.5px;
+      font-size: clamp(2.4rem, 5vw, 4.2rem);
+      line-height: 1.04;
+      letter-spacing: -0.5px;
       margin: 22px 0 22px;
     }
 
     .hero-lede {
       font-size: 1.2rem;
       max-width: 34ch;
-      color: #222;
+      color: var(--muted);
     }
 
     .hero-ctas {
@@ -97,10 +97,10 @@
 
     .hero-fine span::before {
       content: '';
-      width: 10px;
-      height: 10px;
-      background: var(--green);
-      border: 2px solid var(--ink);
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border: none;
       border-radius: 50%;
     }
 
@@ -118,7 +118,7 @@
       border-radius: var(--radius);
       box-shadow: var(--shadow-lg);
       overflow: hidden;
-      transform: rotate(1.5deg);
+      transform: none;
     }
 
     .window-bar {
@@ -126,24 +126,25 @@
       align-items: center;
       gap: 8px;
       padding: 12px 16px;
-      background: var(--lilac);
+      background: var(--surface-2);
       border-bottom: var(--border);
       font-family: var(--font-mono);
       font-size: 0.78rem;
       font-weight: 700;
+      color: var(--muted);
     }
 
     .window-bar i {
-      width: 14px;
-      height: 14px;
-      border: 2px solid var(--ink);
+      width: 11px;
+      height: 11px;
+      border: none;
       border-radius: 50%;
-      background: var(--white);
+      background: #3a3e47;
     }
 
-    .window-bar i:nth-child(1) { background: var(--pink); }
-    .window-bar i:nth-child(2) { background: var(--yellow); }
-    .window-bar i:nth-child(3) { background: var(--green); }
+    .window-bar i:nth-child(1) { background: var(--accent); }
+    .window-bar i:nth-child(2) { background: #3a3e47; }
+    .window-bar i:nth-child(3) { background: #3a3e47; }
 
     .window-bar b {
       margin-left: 8px;
@@ -163,12 +164,12 @@
       padding: 16px;
       border: var(--border);
       border-radius: var(--radius-sm);
-      background: var(--paper);
+      background: var(--surface-2);
     }
 
     .mock-lead.dim {
-      opacity: 0.85;
-      background: var(--white);
+      opacity: 0.9;
+      background: var(--surface-2);
     }
 
     .score-dot {
@@ -176,11 +177,11 @@
       height: 64px;
       display: grid;
       place-items: center;
-      border: var(--border);
+      border: 1px solid var(--line);
       border-radius: 50%;
       font-family: var(--font-display);
       font-size: 1.4rem;
-      box-shadow: 3px 3px 0 var(--ink);
+      box-shadow: none;
     }
 
     .score-dot small {
@@ -191,8 +192,8 @@
       text-align: center;
     }
 
-    .hot { background: var(--pink); }
-    .cool { background: var(--blue); color: var(--white); }
+    .hot { background: var(--accent); color: #16100b; }
+    .cool { background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); }
 
     .mock-lead h3 {
       font-size: 1.05rem;
@@ -211,22 +212,26 @@
       font-family: var(--font-mono);
       font-size: 0.72rem;
       font-weight: 700;
-      border: 2px solid var(--ink);
-      border-radius: 999px;
-      background: var(--yellow);
+      border: 1px solid rgba(255, 109, 45, 0.5);
+      border-radius: 4px;
+      background: rgba(255, 109, 45, 0.12);
+      color: var(--accent);
     }
 
     .tag.ok {
-      background: var(--white);
+      background: transparent;
+      border-color: var(--line);
+      color: var(--muted);
     }
 
     .mock-email {
       padding: 14px 16px;
       border: var(--border);
       border-radius: var(--radius-sm);
-      background: var(--white);
+      background: #101216;
       font-size: 0.86rem;
       line-height: 1.55;
+      color: var(--ink);
     }
 
     .mock-email b {
@@ -244,15 +249,13 @@
     .float-1 {
       top: 0;
       right: 0;
-      transform: rotate(6deg);
-      background: var(--green);
+      transform: none;
     }
 
     .float-2 {
       bottom: 44px;
       right: -8px;
-      transform: rotate(-5deg);
-      background: var(--orange);
+      transform: none;
     }
 
     .art-caption {
@@ -267,13 +270,13 @@
     /* ---------- Marquee ---------- */
 
     .marquee {
-      background: var(--ink);
-      color: var(--yellow);
+      background: #0a0b0d;
+      color: var(--ink);
       border-top: var(--border);
       border-bottom: var(--border);
       overflow: hidden;
-      transform: rotate(-1deg);
-      margin: 0 -10px;
+      transform: none;
+      margin: 0;
     }
 
     .marquee-track {
@@ -292,7 +295,7 @@
     .marquee-track span::after {
       content: '\2726';
       margin: 0 28px;
-      color: var(--pink);
+      color: var(--accent);
     }
 
     @keyframes scroll {
@@ -321,7 +324,7 @@
     .section-head p {
       font-size: 1.1rem;
       margin-top: 14px;
-      color: #222;
+      color: var(--muted);
     }
 
     /* How it works */
@@ -337,21 +340,23 @@
       position: relative;
     }
 
-    .step:nth-child(1) { background: var(--yellow); }
-    .step:nth-child(2) { background: var(--pink); }
-    .step:nth-child(3) { background: var(--blue); }
+    .step:nth-child(1) { background: var(--white); border-top: 2px solid var(--accent); }
+    .step:nth-child(2) { background: var(--white); }
+    .step:nth-child(3) { background: var(--white); }
 
     .step-num {
-      width: 52px;
-      height: 52px;
+      width: 48px;
+      height: 48px;
       display: grid;
       place-items: center;
-      font-family: var(--font-display);
-      font-size: 1.4rem;
-      background: var(--white);
-      border: var(--border);
-      border-radius: 50%;
-      box-shadow: 3px 3px 0 var(--ink);
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: rgba(255, 109, 45, 0.1);
+      border: 1px solid rgba(255, 109, 45, 0.45);
+      border-radius: 6px;
+      box-shadow: none;
       margin-bottom: 22px;
     }
 
@@ -371,8 +376,9 @@
       padding: 10px 12px;
       font-family: var(--font-mono);
       font-size: 0.8rem;
-      background: var(--white);
-      border: 2px solid var(--ink);
+      color: var(--muted);
+      background: #101216;
+      border: 1px solid var(--line);
       border-radius: var(--radius-sm);
     }
 
@@ -395,13 +401,14 @@
     }
 
     .feature-icon {
-      width: 54px;
-      height: 54px;
+      width: 48px;
+      height: 48px;
       display: grid;
       place-items: center;
-      border: var(--border);
+      background: rgba(255, 109, 45, 0.1);
+      border: 1px solid rgba(255, 109, 45, 0.4);
       border-radius: var(--radius-sm);
-      box-shadow: 3px 3px 0 var(--ink);
+      box-shadow: none;
       margin-bottom: 18px;
     }
 
@@ -412,7 +419,7 @@
     }
 
     .feature p {
-      color: #2a2a2a;
+      color: var(--muted);
     }
 
     .feature .via {
@@ -428,7 +435,7 @@
     /* Stat band */
 
     .stat-band {
-      background: var(--yellow);
+      background: #0a0b0d;
       border-top: var(--border);
       border-bottom: var(--border);
       padding: 80px 0;
@@ -450,7 +457,7 @@
 
     .stat.before {
       position: relative;
-      color: #6b5a00;
+      color: var(--muted);
     }
 
     .stat.before::after {
@@ -459,18 +466,20 @@
       left: -6px;
       right: -6px;
       top: 50%;
-      height: 10px;
-      background: var(--ink);
-      transform: rotate(-6deg);
+      height: 2px;
+      background: var(--muted);
+      transform: none;
+      opacity: 0.6;
     }
 
     .stat.after {
       padding: 10px 22px;
-      background: var(--white);
-      border: var(--border);
+      color: var(--accent);
+      background: rgba(255, 109, 45, 0.08);
+      border: 1px solid rgba(255, 109, 45, 0.5);
       border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      transform: rotate(-2deg);
+      box-shadow: none;
+      transform: none;
     }
 
     .stat-copy {
@@ -491,7 +500,7 @@
       gap: 40px;
       align-items: center;
       padding: 44px;
-      background: var(--green);
+      background: var(--white);
     }
 
     .open > * {
@@ -512,11 +521,11 @@
     }
 
     .terminal {
-      background: var(--ink);
-      color: #e8e8e8;
+      background: #0a0b0d;
+      color: #d7d9de;
       border: var(--border);
       border-radius: var(--radius);
-      box-shadow: var(--shadow);
+      box-shadow: none;
       padding: 20px 22px;
       font-family: var(--font-mono);
       font-size: 0.85rem;
@@ -525,8 +534,8 @@
       overflow-wrap: anywhere;
     }
 
-    .terminal .c { color: #8a8a8a; }
-    .terminal .p { color: var(--yellow); }
+    .terminal .c { color: #63676f; }
+    .terminal .p { color: var(--accent); }
 
     .open-actions {
       display: flex;
@@ -540,7 +549,8 @@
     .final {
       text-align: center;
       padding: 72px 32px;
-      background: var(--pink);
+      background: var(--white);
+      border: 1px solid rgba(255, 109, 45, 0.35);
     }
 
     .final h2 {
@@ -563,7 +573,8 @@
     footer {
       border-top: var(--border);
       padding: 32px 0;
-      background: var(--white);
+      background: #0a0b0d;
+      color: var(--muted);
     }
 
     footer .wrap {
@@ -644,9 +655,9 @@
     <div class="wrap">
       <a class="brand" href="/" aria-label="LeadRadar home">
         <span class="brand-mark">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f2f2f0" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
             <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12 19 5.5"/>
-            <circle cx="16.4" cy="8.2" r="1.7" fill="#111" stroke="none"/>
+            <circle cx="16.4" cy="8.2" r="1.7" fill="#ff6d2d" stroke="none"/>
           </svg>
         </span>
         LeadRadar
@@ -777,48 +788,48 @@
         </div>
         <div class="features">
           <article class="card feature">
-            <div class="feature-icon" style="background: var(--yellow)">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+            <div class="feature-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f2f2f0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
             </div>
             <h3>Real Google Maps data</h3>
             <p>Live listings for your city, not a stale directory someone scraped in 2019.</p>
             <span class="via">via SerpApi</span>
           </article>
           <article class="card feature">
-            <div class="feature-icon" style="background: var(--green)">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>
+            <div class="feature-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f2f2f0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>
             </div>
             <h3>Facts, not guesses</h3>
             <p>Signals like "no website" come straight from the listing. The AI never invents a problem the data doesn't show.</p>
             <span class="via">Checked in code</span>
           </article>
           <article class="card feature">
-            <div class="feature-icon" style="background: var(--pink)">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="m13.5 6.5 4 4"/></svg>
+            <div class="feature-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f2f2f0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="m13.5 6.5 4 4"/></svg>
             </div>
             <h3>Emails signed by you</h3>
             <p>Short drafts built around the one thing LeadRadar found, ending with your name, not "[Your Name]".</p>
             <span class="via">Top 10 leads per scan</span>
           </article>
           <article class="card feature">
-            <div class="feature-icon" style="background: var(--blue)">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.6-4.5L4 8"/><path d="M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14.6 4.5L20 16"/><path d="M20 20v-4h-4"/></svg>
+            <div class="feature-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f2f2f0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.6-4.5L4 8"/><path d="M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14.6 4.5L20 16"/><path d="M20 20v-4h-4"/></svg>
             </div>
             <h3>Never loses a scan</h3>
             <p>A flaky API call becomes a retry, not a lost scan. The whole pipeline runs as one durable workflow.</p>
             <span class="via">via Temporal</span>
           </article>
           <article class="card feature">
-            <div class="feature-icon" style="background: var(--orange)">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="7.5" ry="2.8"/><path d="M4.5 5.5v6.5c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V5.5"/><path d="M4.5 12v6.5c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V12"/></svg>
+            <div class="feature-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f2f2f0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="7.5" ry="2.8"/><path d="M4.5 5.5v6.5c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V5.5"/><path d="M4.5 12v6.5c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V12"/></svg>
             </div>
             <h3>Every lead saved</h3>
             <p>Scores, signals and drafts are stored, so last week's scan is still there when you come back to it.</p>
             <span class="via">via MongoDB Atlas</span>
           </article>
           <article class="card feature">
-            <div class="feature-icon" style="background: var(--lilac)">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.6-1.8"/></svg>
+            <div class="feature-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f2f2f0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.6-1.8"/></svg>
             </div>
             <h3>Open-weight brain</h3>
             <p>Runs on open models through Groq, or fully on your own machine with Ollama. Switch with one setting.</p>

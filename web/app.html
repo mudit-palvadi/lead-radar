@@ -94,11 +94,12 @@
 
     .alert {
       padding: 14px 16px;
-      background: #ffe1e8;
-      border: var(--border);
+      background: rgba(255, 90, 90, 0.08);
+      border: 1px solid rgba(255, 90, 90, 0.45);
       border-radius: var(--radius-sm);
-      box-shadow: var(--shadow-sm);
+      box-shadow: none;
       font-weight: 600;
+      color: #ffb4b4;
     }
 
     .alert ul {
@@ -126,12 +127,12 @@
       width: 168px;
       height: 168px;
       margin: 0 auto 28px;
-      border: var(--border);
+      border: 1px solid rgba(255, 109, 45, 0.4);
       border-radius: 50%;
       background:
-        radial-gradient(circle, transparent 30%, rgba(17, 17, 17, 0.9) 30.5%, rgba(17, 17, 17, 0.9) 32%, transparent 32.5%),
-        radial-gradient(circle, transparent 60%, rgba(17, 17, 17, 0.9) 60.5%, rgba(17, 17, 17, 0.9) 62%, transparent 62.5%),
-        var(--yellow);
+        radial-gradient(circle, transparent 30%, rgba(255, 109, 45, 0.35) 30.5%, rgba(255, 109, 45, 0.35) 31.5%, transparent 32%),
+        radial-gradient(circle, transparent 60%, rgba(242, 242, 240, 0.18) 60.5%, rgba(242, 242, 240, 0.18) 61.5%, transparent 62%),
+        #101216;
       box-shadow: var(--shadow);
       overflow: hidden;
     }
@@ -140,22 +141,22 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: conic-gradient(from 0deg, rgba(255, 92, 138, 0.85), transparent 28%);
+      background: conic-gradient(from 0deg, rgba(255, 109, 45, 0.55), transparent 28%);
       animation: sweep 3s linear infinite;
     }
 
     .radar i {
       position: absolute;
-      width: 14px;
-      height: 14px;
-      background: var(--pink);
-      border: 2px solid var(--ink);
+      width: 12px;
+      height: 12px;
+      background: var(--accent);
+      border: none;
       border-radius: 50%;
     }
 
     .radar i:nth-of-type(1) { top: 30%; left: 62%; }
-    .radar i:nth-of-type(2) { top: 64%; left: 26%; background: var(--blue); }
-    .radar i:nth-of-type(3) { top: 70%; left: 66%; background: var(--green); }
+    .radar i:nth-of-type(2) { top: 64%; left: 26%; background: #d7d9de; }
+    .radar i:nth-of-type(3) { top: 70%; left: 66%; background: #63676f; }
 
     @keyframes sweep {
       to { transform: rotate(360deg); }
@@ -196,9 +197,10 @@
       font-family: var(--font-mono);
       font-weight: 700;
       padding: 4px 12px;
-      background: var(--paper);
-      border: 2px solid var(--ink);
-      border-radius: 999px;
+      background: #101216;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      color: var(--muted);
     }
 
     .steps {
@@ -213,45 +215,55 @@
       align-items: center;
       gap: 10px;
       padding: 12px;
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       font-weight: 600;
-      background: var(--white);
+      color: var(--muted);
+      background: #101216;
       border: var(--border);
       border-radius: var(--radius-sm);
-      opacity: 0.55;
+      opacity: 0.7;
       transition: background 0.2s ease, opacity 0.2s ease;
     }
 
     .steps li b {
       flex: none;
-      width: 28px;
-      height: 28px;
+      width: 26px;
+      height: 26px;
       display: grid;
       place-items: center;
       font-family: var(--font-mono);
-      background: var(--paper);
-      border: 2px solid var(--ink);
-      border-radius: 50%;
+      font-size: 0.8rem;
+      background: transparent;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      color: var(--muted);
     }
 
     .steps li.active {
       opacity: 1;
-      background: var(--yellow);
-      box-shadow: var(--shadow-sm);
+      color: var(--ink);
+      background: rgba(255, 109, 45, 0.1);
+      border-color: rgba(255, 109, 45, 0.5);
+      box-shadow: none;
     }
 
     .steps li.active b {
+      color: var(--accent);
+      border-color: var(--accent);
       animation: pulse 1s ease-in-out infinite;
     }
 
     .steps li.done {
       opacity: 1;
-      background: var(--green);
+      color: var(--ink);
+      background: rgba(52, 211, 153, 0.08);
+      border-color: rgba(52, 211, 153, 0.4);
     }
 
     .steps li.done b {
-      background: var(--ink);
-      color: var(--white);
+      background: transparent;
+      border-color: rgba(52, 211, 153, 0.6);
+      color: var(--green);
     }
 
     @keyframes pulse {
@@ -277,10 +289,10 @@
       padding: 16px 18px;
     }
 
-    .stat-tile:nth-child(1) { background: var(--yellow); }
-    .stat-tile:nth-child(2) { background: var(--pink); }
-    .stat-tile:nth-child(3) { background: var(--green); }
-    .stat-tile:nth-child(4) { background: var(--lilac); }
+    .stat-tile:nth-child(1) { border-top: 2px solid var(--accent); }
+    .stat-tile:nth-child(2) { border-top: 2px solid rgba(242, 242, 240, 0.35); }
+    .stat-tile:nth-child(3) { border-top: 2px solid rgba(242, 242, 240, 0.35); }
+    .stat-tile:nth-child(4) { border-top: 2px solid rgba(242, 242, 240, 0.35); }
 
     .stat-tile strong {
       display: block;
@@ -339,14 +351,14 @@
     }
 
     .score {
-      width: 74px;
-      height: 74px;
+      width: 70px;
+      height: 70px;
       display: grid;
       place-content: center;
       text-align: center;
-      border: var(--border);
+      border: 1px solid var(--line);
       border-radius: 50%;
-      box-shadow: 3px 3px 0 var(--ink);
+      box-shadow: none;
     }
 
     .score strong {
@@ -361,9 +373,9 @@
       font-weight: 700;
     }
 
-    .tier-hot { background: var(--pink); }
-    .tier-warm { background: var(--orange); }
-    .tier-cool { background: var(--blue); color: var(--white); }
+    .tier-hot { background: var(--accent); color: #16100b; border-color: var(--accent); }
+    .tier-warm { background: rgba(255, 109, 45, 0.14); color: var(--accent); border-color: rgba(255, 109, 45, 0.5); }
+    .tier-cool { background: var(--surface-2); color: var(--muted); }
 
     .lead-name {
       display: flex;
@@ -380,12 +392,13 @@
 
     .rank {
       font-family: var(--font-mono);
-      font-size: 0.74rem;
+      font-size: 0.72rem;
       font-weight: 700;
       padding: 2px 8px;
-      background: var(--ink);
-      color: var(--white);
-      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      border-radius: 4px;
     }
 
     .lead-meta {
@@ -410,7 +423,7 @@
     }
 
     .facts a:hover {
-      background: var(--yellow);
+      background: rgba(255, 109, 45, 0.14);
     }
 
     .signals {
@@ -426,13 +439,15 @@
       font-family: var(--font-mono);
       font-size: 0.72rem;
       font-weight: 700;
-      border: 2px solid var(--ink);
-      border-radius: 999px;
-      background: var(--white);
+      border: 1px solid rgba(255, 109, 45, 0.5);
+      border-radius: 4px;
+      background: rgba(255, 109, 45, 0.12);
+      color: var(--accent);
     }
 
-    .tag-high { background: var(--yellow); }
-    .tag-medium { background: #ffd7b5; }
+    .tag-high { background: rgba(255, 109, 45, 0.12); color: var(--accent); border-color: rgba(255, 109, 45, 0.5); }
+    .tag-medium { background: transparent; color: var(--muted); border-color: var(--line); }
+    .tag-low { background: transparent; color: var(--muted); border-color: var(--line); }
 
     .lead-actions {
       display: flex;
@@ -449,7 +464,8 @@
       line-height: 1.6;
       white-space: pre-wrap;
       word-wrap: break-word;
-      background: var(--paper);
+      color: var(--ink);
+      background: #101216;
       border: var(--border);
       border-radius: var(--radius-sm);
     }
@@ -515,14 +531,14 @@
       <div class="topbar-left">
         <a class="brand" href="/" aria-label="LeadRadar home">
           <span class="brand-mark">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f2f2f0" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
               <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12 19 5.5"/>
-              <circle cx="16.4" cy="8.2" r="1.7" fill="#111" stroke="none"/>
+              <circle cx="16.4" cy="8.2" r="1.7" fill="#ff6d2d" stroke="none"/>
             </svg>
           </span>
           LeadRadar
         </a>
-        <span class="sticker" style="background: var(--green)">Scanner</span>
+        <span class="sticker">Scanner</span>
       </div>
       <a class="back-link" href="/">&larr; <span>Back to home</span></a>
     </div>
