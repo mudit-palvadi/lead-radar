@@ -88,6 +88,49 @@ export function ensureSignOff(body: string, senderName: string): string {
   return `${trimmed}\n\nBest,\n${senderName}`;
 }
 
+/**
+ * Sentences where the model confesses it never looked at something
+ * ("I haven't checked your website") read as unprofessional in outreach.
+ * The prompt tells it not to comment on things it hasn't seen; when that
+ * leaks into the email anyway, strip it here rather than trusting the prompt.
+ */
+export function cleanEmailBody(body: string): string {
+  const confession =
+    /\s*[^.!?]*\b(i\s+(have\s*(not|n'?t)|has\s*(not|n'?t)|did\s*(not|n'?t)|could\s*(not|n'?t)|ca\s*(not|n'?t)|was\s*(not|n'?t)|were\s*(not|n'?t)|had\s*(not|n'?t))|i\s+am\s+unable\s+to|i\s+do\s*not\s+have\s+access\s+to)[^.!?]*[.!?]/gi;
+  const cleaned = (body ?? '').replace(confession, '').replace(/\n{3,}/g, '\n\n').trim();
+  return cleaned || (body ?? '').trim();
+}
+
+/**
+ * The old prompt told every freelancer "offering to build one is the natural
+ * pitch" whenever a lead had no website — so a social media marketer ended up
+ * pitching websites. The pitch must always be the user's own service.
+ */
+export function pitchGuidance(service: string, hasWebsite: boolean): string {
+  const offersWeb = /\bweb(?:site)?s?\b|\bsite\b|\bweb\s*dev|\bfront-?end\b/i.test(service);
+
+  if (!hasWebsite && !offersWeb) {
+    return (
+      `This business has no website. That is context, NOT your pitch. ` +
+      `You do ${service} — you do not build websites. Never offer to build, design, ` +
+      `redesign, or "create" a website. Instead, frame the missing website as the ` +
+      `visibility problem your service solves (customers searching for them find ` +
+      `nothing; competitors show up first), and pitch ${service} as the fix.`
+    );
+  }
+  if (!hasWebsite && offersWeb) {
+    return (
+      `This business has no website, and your service is ${service}, so offering ` +
+      `to build one is the natural pitch.`
+    );
+  }
+  return (
+    `This business already has a website. Never offer to build them one or tell ` +
+    `them they need an online presence. Pitch ${service} as the way to get more ` +
+    `out of what they already have.`
+  );
+}
+
 export async function draftOutreachEmail(
   lead: BusinessLead,
   service: string,
@@ -100,7 +143,7 @@ export async function draftOutreachEmail(
     if (!parsed) return fallbackEmail(lead, service, senderName);
     return {
       subject: String(parsed.subject || ''),
-      body: ensureSignOff(String(parsed.body || ''), senderName),
+      body: ensureSignOff(cleanEmailBody(String(parsed.body || '')), senderName),
       tone: parsed.tone ?? 'professional',
     };
   } catch (error) {
@@ -179,11 +222,10 @@ Write a short email, under 120 words, that:
 4. Ends with a clear low-friction ask.
 5. Reads like a person writing to another person, not a template.
 6. Address the business as "you". Never write "they", "their" or "their business".
-7. ${lead.hasWebsite
-      ? 'This business already has a website. Never offer to build them one or tell them they need an online presence. Pitch improving what they already have.'
-      : 'This business has no website, so offering to build one is the natural pitch.'}
-${reviews < 5 ? '7. Do not mention reviews or ratings at all in this email.\n' : ''}
-You have NOT visited the website. Never comment on its design, layout or content.
+7. ${pitchGuidance(service, lead.hasWebsite)}
+8. Your ONLY offer is ${service}. Never offer web design, web development, SEO, logo design, or any other service — even if the business seems to need it.
+${reviews < 5 ? '9. Do not mention reviews or ratings at all in this email.\n' : ''}
+Never describe or judge the website's design, layout, content, or age — simply do not bring those topics up at all. Never mention what you have or have not checked, visited, or reviewed; just write about the business.
 
 This business is a prospective customer, not a competitor. Never describe it as offering ${service}.
 Sign off as ${senderName}. Never write "[Your Name]".
