@@ -24,12 +24,19 @@ describe('ScanModel', () => {
   });
 
   it('has request sub-fields', () => {
-    const request = ScanModel.schema.path('request') as any;
-    expect(request).toBeDefined();
-    expect(request.tree).toHaveProperty('service');
-    expect(request.tree).toHaveProperty('location');
-    expect(request.tree).toHaveProperty('criteria');
-    expect(request.tree).toHaveProperty('maxLeads');
+    // Mongoose flattens nested objects, so 'request.criteria' has no path of
+    // its own — its boolean keys do.
+    for (const field of [
+      'request.service',
+      'request.location',
+      'request.maxLeads',
+      'request.criteria.noWebsite',
+      'request.criteria.outdatedWebsite',
+      'request.criteria.noGoogleBusiness',
+      'request.criteria.badReviewsNoResponse',
+    ]) {
+      expect(ScanModel.schema.path(field), field).toBeDefined();
+    }
   });
 
   it('has leads array with nested schema fields', () => {

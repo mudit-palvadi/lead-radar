@@ -28,7 +28,7 @@ describe('searchBusinesses', () => {
       expect(typeof lead.id).toBe('string');
       expect(lead.name).toContain('Denver, CO');
       expect(lead.address).toContain('Denver, CO');
-      expect(lead.hasWebsite).toBe(typeof lead.hasWebsite === 'boolean');
+      expect(typeof lead.hasWebsite).toBe('boolean');
       expect(Array.isArray(lead.signals)).toBe(true);
       expect(lead.signals.length).toBeGreaterThan(0);
       expect(lead.score).toBe(0);
