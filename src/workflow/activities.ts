@@ -72,7 +72,10 @@ export async function classifyLeads(
       } else {
         classified.push({
           ...batch[j],
-          score: 0,
+          // Model unavailable — fall back to the signal-derived score (a
+          // neutral 50 for the model's 25% share) so the scan still returns
+          // real, ranked leads instead of a dead end.
+          score: scoreLead(batch[j], 50),
           signals: batch[j].signals,
         });
       }

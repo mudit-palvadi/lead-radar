@@ -127,11 +127,42 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+const SCAN_TIMEOUT_MS = parseInt(process.env.SCAN_TIMEOUT_MS || '300000', 10);
+
+/**
+ * A scan stuck in a non-terminal state means the worker isn't running or the
+ * model is rate-limited into the ground. Without this, the frontend spins
+ * forever. Mark it failed so the user gets a clear signal to retry.
+ */
+async function sweepStaleScans(): Promise<void> {
+  const cutoff = new Date(Date.now() - SCAN_TIMEOUT_MS);
+  const result = await ScanModel.updateMany(
+    {
+      status: { $in: ['pending', 'scanning', 'classifying', 'drafting'] },
+      createdAt: { $lt: cutoff },
+    },
+    {
+      $set: {
+        status: 'failed',
+        error: 'Scan timed out. The worker may not be running — try again.',
+      },
+    },
+  );
+  if (result.modifiedCount > 0) {
+    console.log(`[sweep] marked ${result.modifiedCount} stale scan(s) as failed`);
+  }
+}
+
 async function start(): Promise<void> {
   await connectDatabase();
   app.listen(config.port, () => {
     console.log(`LeadRadar API listening on port ${config.port}`);
   });
+
+  sweepStaleScans().catch(() => {});
+  setInterval(() => {
+    sweepStaleScans().catch(() => {});
+  }, 60_000);
 }
 
 start().catch(console.error);
