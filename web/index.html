@@ -3,540 +3,880 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LeadRadar</title>
+  <title>LeadRadar · Find the clients hiding on Google Maps</title>
+  <meta name="description" content="LeadRadar scans local businesses, spots the ones that need your service, and drafts the first email for you. Open source and free.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
   <style>
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+    /* ---------- Nav ---------- */
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: var(--paper);
+      border-bottom: var(--border);
     }
 
-    :root {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --surface-light: #242836;
-      --border: #2e3347;
-      --text: #e8eaf0;
-      --text-muted: #8b91a7;
-      --accent: #6c5ce7;
-      --accent-hover: #7d6df0;
-      --success: #00cec9;
-      --radius: 12px;
-      --radius-sm: 8px;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
+    .nav .wrap {
       display: flex;
-      justify-content: center;
-      padding: 40px 20px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      height: 76px;
     }
 
-    .container {
-      width: 100%;
-      max-width: 900px;
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      list-style: none;
     }
 
-    header {
-      text-align: center;
-      margin-bottom: 36px;
+    .nav-links a {
+      font-weight: 600;
+      text-decoration: none;
+      border-bottom: 3px solid transparent;
+      padding-bottom: 2px;
     }
 
-    header h1 {
-      font-size: 2rem;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      background: linear-gradient(135deg, var(--accent), var(--success));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+    .nav-links a:hover {
+      border-bottom-color: var(--pink);
     }
 
-    header p {
-      color: var(--text-muted);
-      margin-top: 6px;
-      font-size: 0.95rem;
+    /* ---------- Hero ---------- */
+
+    .hero {
+      padding: 72px 0 96px;
     }
 
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 28px;
-      margin-bottom: 24px;
-    }
-
-    .form-grid {
+    .hero .wrap {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-bottom: 16px;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 56px;
+      align-items: center;
     }
 
-    .form-group {
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(2.6rem, 5.6vw, 4.6rem);
+      line-height: 1.02;
+      letter-spacing: -1.5px;
+      margin: 22px 0 22px;
+    }
+
+    .hero-lede {
+      font-size: 1.2rem;
+      max-width: 34ch;
+      color: #222;
+    }
+
+    .hero-ctas {
       display: flex;
-      flex-direction: column;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin: 34px 0 20px;
+    }
+
+    .hero-fine {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .hero-fine span {
+      display: inline-flex;
+      align-items: center;
       gap: 6px;
     }
 
-    .form-group.full-width {
-      grid-column: 1 / -1;
-    }
-
-    label {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    input[type="text"],
-    input[type="number"] {
-      background: var(--surface-light);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text);
-      padding: 10px 14px;
-      font-size: 0.9rem;
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    input[type="text"]:focus,
-    input[type="number"]:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
-    }
-
-    .criteria-group {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .checkbox-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      background: var(--surface-light);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: border-color 0.2s;
-    }
-
-    .checkbox-item:hover {
-      border-color: var(--accent);
-    }
-
-    .checkbox-item input[type="checkbox"] {
-      accent-color: var(--accent);
-      width: 16px;
-      height: 16px;
-      cursor: pointer;
-    }
-
-    .checkbox-item span {
-      font-size: 0.85rem;
-      color: var(--text);
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 12px 24px;
-      border: none;
-      border-radius: var(--radius-sm);
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      color: #fff;
-      width: 100%;
-    }
-
-    .btn-primary:hover {
-      background: var(--accent-hover);
-    }
-
-    .btn-primary:active {
-      transform: scale(0.98);
-    }
-
-    .btn-primary:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .status-bar {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
-
-    .spinner {
-      width: 16px;
-      height: 16px;
-      border: 2px solid var(--border);
-      border-top-color: var(--accent);
+    .hero-fine span::before {
+      content: '';
+      width: 10px;
+      height: 10px;
+      background: var(--green);
+      border: 2px solid var(--ink);
       border-radius: 50%;
-      animation: spin 0.7s linear infinite;
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+    /* Hero illustration */
+
+    .hero-art {
+      position: relative;
+      padding: 26px 14px 0 26px;
     }
 
-    .scan-id {
-      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-      background: var(--surface-light);
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 0.8rem;
+    .window {
+      position: relative;
+      background: var(--white);
+      border: var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      transform: rotate(1.5deg);
     }
 
-    .results-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .results-table th,
-    .results-table td {
-      padding: 12px 14px;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .results-table th {
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text-muted);
-    }
-
-    .results-table td {
-      font-size: 0.9rem;
-      vertical-align: top;
-    }
-
-    .results-table tr:last-child td {
-      border-bottom: none;
-    }
-
-    .results-table tr:hover td {
-      background: var(--surface-light);
-    }
-
-    .signal-tags {
+    .window-bar {
       display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: var(--lilac);
+      border-bottom: var(--border);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .window-bar i {
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      background: var(--white);
+    }
+
+    .window-bar i:nth-child(1) { background: var(--pink); }
+    .window-bar i:nth-child(2) { background: var(--yellow); }
+    .window-bar i:nth-child(3) { background: var(--green); }
+
+    .window-bar b {
+      margin-left: 8px;
+    }
+
+    .window-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .mock-lead {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 16px;
+      padding: 16px;
+      border: var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--paper);
+    }
+
+    .mock-lead.dim {
+      opacity: 0.85;
+      background: var(--white);
+    }
+
+    .score-dot {
+      width: 64px;
+      height: 64px;
+      display: grid;
+      place-items: center;
+      border: var(--border);
+      border-radius: 50%;
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      box-shadow: 3px 3px 0 var(--ink);
+    }
+
+    .score-dot small {
+      display: block;
+      margin-top: -6px;
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      text-align: center;
+    }
+
+    .hot { background: var(--pink); }
+    .cool { background: var(--blue); color: var(--white); }
+
+    .mock-lead h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .mock-meta {
+      font-size: 0.84rem;
+      color: var(--muted);
+      margin: 2px 0 8px;
     }
 
     .tag {
       display: inline-block;
-      padding: 3px 8px;
-      background: var(--surface-light);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      font-size: 0.75rem;
-      color: var(--text-muted);
+      padding: 3px 10px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      border: 2px solid var(--ink);
+      border-radius: 999px;
+      background: var(--yellow);
     }
 
-    .btn-email {
-      background: transparent;
-      border: 1px solid var(--accent);
-      color: var(--accent);
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      cursor: pointer;
-      transition: background 0.2s;
+    .tag.ok {
+      background: var(--white);
     }
 
-    .btn-email:hover {
-      background: rgba(108, 92, 231, 0.1);
-    }
-
-    .email-reveal {
-      margin-top: 8px;
-      padding: 12px;
-      background: var(--surface-light);
-      border: 1px solid var(--border);
+    .mock-email {
+      padding: 14px 16px;
+      border: var(--border);
       border-radius: var(--radius-sm);
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      line-height: 1.5;
-      white-space: pre-wrap;
-      display: none;
+      background: var(--white);
+      font-size: 0.86rem;
+      line-height: 1.55;
     }
 
-    .email-reveal.visible {
+    .mock-email b {
       display: block;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      margin-bottom: 6px;
     }
 
-    .empty-state {
+    .float {
+      position: absolute;
+      z-index: 2;
+    }
+
+    .float-1 {
+      top: 0;
+      right: 0;
+      transform: rotate(6deg);
+      background: var(--green);
+    }
+
+    .float-2 {
+      bottom: 44px;
+      right: -8px;
+      transform: rotate(-5deg);
+      background: var(--orange);
+    }
+
+    .art-caption {
+      display: block;
+      margin-top: 22px;
+      text-align: right;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    /* ---------- Marquee ---------- */
+
+    .marquee {
+      background: var(--ink);
+      color: var(--yellow);
+      border-top: var(--border);
+      border-bottom: var(--border);
+      overflow: hidden;
+      transform: rotate(-1deg);
+      margin: 0 -10px;
+    }
+
+    .marquee-track {
+      display: flex;
+      width: max-content;
+      animation: scroll 28s linear infinite;
+    }
+
+    .marquee-track span {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      padding: 16px 0;
+      white-space: nowrap;
+    }
+
+    .marquee-track span::after {
+      content: '\2726';
+      margin: 0 28px;
+      color: var(--pink);
+    }
+
+    @keyframes scroll {
+      to { transform: translateX(-50%); }
+    }
+
+    /* ---------- Sections ---------- */
+
+    section.block {
+      padding: 104px 0;
+    }
+
+    .section-head {
+      max-width: 680px;
+      margin-bottom: 52px;
+    }
+
+    .section-head h2 {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1.05;
+      letter-spacing: -1px;
+      margin-top: 18px;
+    }
+
+    .section-head p {
+      font-size: 1.1rem;
+      margin-top: 14px;
+      color: #222;
+    }
+
+    /* How it works */
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+    }
+
+    .step {
+      padding: 28px;
+      position: relative;
+    }
+
+    .step:nth-child(1) { background: var(--yellow); }
+    .step:nth-child(2) { background: var(--pink); }
+    .step:nth-child(3) { background: var(--blue); }
+
+    .step-num {
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      background: var(--white);
+      border: var(--border);
+      border-radius: 50%;
+      box-shadow: 3px 3px 0 var(--ink);
+      margin-bottom: 22px;
+    }
+
+    .step h3 {
+      font-family: var(--font-display);
+      font-size: 1.45rem;
+      line-height: 1.1;
+      margin-bottom: 10px;
+    }
+
+    .step p {
+      font-size: 1rem;
+    }
+
+    .step-example {
+      margin-top: 18px;
+      padding: 10px 12px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      background: var(--white);
+      border: 2px solid var(--ink);
+      border-radius: var(--radius-sm);
+    }
+
+    /* Features */
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .feature {
+      padding: 26px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .feature:hover {
+      transform: translate(-3px, -3px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .feature-icon {
+      width: 54px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      border: var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: 3px 3px 0 var(--ink);
+      margin-bottom: 18px;
+    }
+
+    .feature h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .feature p {
+      color: #2a2a2a;
+    }
+
+    .feature .via {
+      display: inline-block;
+      margin-top: 14px;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* Stat band */
+
+    .stat-band {
+      background: var(--yellow);
+      border-top: var(--border);
+      border-bottom: var(--border);
+      padding: 80px 0;
+    }
+
+    .stat-band .wrap {
+      display: grid;
+      grid-template-columns: auto auto 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .stat {
+      font-family: var(--font-display);
+      font-size: clamp(3rem, 7vw, 5.5rem);
+      line-height: 1;
+      letter-spacing: -2px;
+    }
+
+    .stat.before {
+      position: relative;
+      color: #6b5a00;
+    }
+
+    .stat.before::after {
+      content: '';
+      position: absolute;
+      left: -6px;
+      right: -6px;
+      top: 50%;
+      height: 10px;
+      background: var(--ink);
+      transform: rotate(-6deg);
+    }
+
+    .stat.after {
+      padding: 10px 22px;
+      background: var(--white);
+      border: var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      transform: rotate(-2deg);
+    }
+
+    .stat-copy {
+      font-size: 1.15rem;
+      max-width: 38ch;
+    }
+
+    .stat-copy strong {
+      font-family: var(--font-display);
+      font-weight: 400;
+    }
+
+    /* Open source */
+
+    .open {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 40px;
+      align-items: center;
+      padding: 44px;
+      background: var(--green);
+    }
+
+    .open > * {
+      min-width: 0;
+    }
+
+    .open h2 {
+      font-family: var(--font-display);
+      font-size: clamp(1.9rem, 3.6vw, 2.7rem);
+      line-height: 1.05;
+      letter-spacing: -1px;
+      margin: 16px 0 14px;
+    }
+
+    .open p {
+      font-size: 1.08rem;
+      max-width: 52ch;
+    }
+
+    .terminal {
+      background: var(--ink);
+      color: #e8e8e8;
+      border: var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px 22px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1.8;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .terminal .c { color: #8a8a8a; }
+    .terminal .p { color: var(--yellow); }
+
+    .open-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 26px;
+    }
+
+    /* Final CTA */
+
+    .final {
       text-align: center;
-      padding: 40px 20px;
-      color: var(--text-muted);
+      padding: 72px 32px;
+      background: var(--pink);
     }
 
-    .hidden {
-      display: none !important;
+    .final h2 {
+      font-family: var(--font-display);
+      font-size: clamp(2.1rem, 5vw, 3.8rem);
+      line-height: 1.02;
+      letter-spacing: -1.5px;
+      max-width: 16ch;
+      margin: 0 auto 18px;
     }
 
-    @media (max-width: 600px) {
-      .form-grid {
+    .final p {
+      font-size: 1.15rem;
+      max-width: 46ch;
+      margin: 0 auto 34px;
+    }
+
+    /* Footer */
+
+    footer {
+      border-top: var(--border);
+      padding: 32px 0;
+      background: var(--white);
+    }
+
+    footer .wrap {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      font-size: 0.92rem;
+    }
+
+    footer nav {
+      display: flex;
+      gap: 22px;
+    }
+
+    footer nav a {
+      font-weight: 600;
+    }
+
+    /* ---------- Responsive ---------- */
+
+    @media (max-width: 960px) {
+      .hero .wrap,
+      .open {
         grid-template-columns: 1fr;
+      }
+
+      .hero-art {
+        max-width: 560px;
+      }
+
+      .steps,
+      .features {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .stat-band .wrap {
+        grid-template-columns: auto auto;
+      }
+
+      .stat-copy {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .nav-links li:not(:last-child) {
+        display: none;
+      }
+
+      .hero {
+        padding-top: 48px;
+      }
+
+      .steps,
+      .features {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-art {
+        padding-left: 6px;
+      }
+
+      .open,
+      .final {
+        padding: 32px 22px;
+      }
+
+      section.block {
+        padding: 72px 0;
       }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>LeadRadar</h1>
-      <p>Find businesses that need your services</p>
-    </header>
+  <header class="nav">
+    <div class="wrap">
+      <a class="brand" href="/" aria-label="LeadRadar home">
+        <span class="brand-mark">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12 19 5.5"/>
+            <circle cx="16.4" cy="8.2" r="1.7" fill="#111" stroke="none"/>
+          </svg>
+        </span>
+        LeadRadar
+      </a>
+      <ul class="nav-links">
+        <li><a href="#how">How it works</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#open-source">Open source</a></li>
+        <li><a class="btn btn-sm btn-yellow" href="/app">Try it free</a></li>
+      </ul>
+    </div>
+  </header>
 
-    <div class="card">
-      <form id="scan-form">
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="service">Service</label>
-            <input type="text" id="service" name="service" placeholder="e.g. Web Development" required>
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <div>
+          <span class="sticker">Open source &middot; Free to use</span>
+          <h1>Stop scrolling Maps. Start landing <span class="highlight">clients.</span></h1>
+          <p class="hero-lede">
+            Tell LeadRadar what you do and where. It finds the local businesses that need you,
+            ranks them, and writes the first email.
+          </p>
+          <div class="hero-ctas">
+            <a class="btn btn-primary btn-lg" href="/app">
+              Find my first leads <span class="arrow" aria-hidden="true">&rarr;</span>
+            </a>
+            <a class="btn btn-lg" href="#how">See how it works</a>
           </div>
-          <div class="form-group">
-            <label for="location">Location</label>
-            <input type="text" id="location" name="location" placeholder="e.g. Austin, TX" required>
-          </div>
-          <div class="form-group">
-            <label for="maxLeads">Max Leads</label>
-            <input type="number" id="maxLeads" name="maxLeads" value="10" min="1" max="100" required>
-          </div>
-          <div class="form-group">
-            <label for="senderName">Your Name</label>
-            <input type="text" id="senderName" name="senderName" placeholder="e.g. Alex" required>
+          <div class="hero-fine">
+            <span>No signup</span>
+            <span>No credit card</span>
+            <span>Results in about a minute</span>
           </div>
         </div>
 
-        <div class="criteria-group">
-          <label class="checkbox-item">
-            <input type="checkbox" name="criteria" value="noWebsite">
-            <span>No Website</span>
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" name="criteria" value="outdatedWebsite">
-            <span>Outdated Website</span>
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" name="criteria" value="noGoogleBusiness">
-            <span>No Google Business</span>
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" name="criteria" value="badReviewsNoResponse">
-            <span>Bad Reviews, No Response</span>
-          </label>
+        <div class="hero-art" aria-hidden="true">
+          <span class="sticker float float-1">+1 hot lead</span>
+          <div class="window">
+            <div class="window-bar"><i></i><i></i><i></i><b>web design &middot; Austin, TX</b></div>
+            <div class="window-body">
+              <div class="mock-lead">
+                <div class="score-dot hot"><div>85<small>HOT</small></div></div>
+                <div>
+                  <h3>Rosa's Taqueria</h3>
+                  <p class="mock-meta">Restaurant &middot; &#9733; 4.7 (212 reviews)</p>
+                  <span class="tag">No website found</span>
+                </div>
+              </div>
+              <div class="mock-email">
+                <b>Subject: More people finding Rosa's online</b>
+                Hi Rosa's team &mdash; 212 reviews at 4.7 stars is a lot of happy regulars, but there's
+                no website for new customers to land on. Could I show you a quick mock-up?
+                <br>&mdash; Alex
+              </div>
+              <div class="mock-lead dim">
+                <div class="score-dot cool"><div>40<small>COOL</small></div></div>
+                <div>
+                  <h3>Northside Auto Care</h3>
+                  <p class="mock-meta">Auto repair &middot; &#9733; 4.5 (88 reviews)</p>
+                  <span class="tag ok">Has a website</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <span class="sticker float float-2">Signed with your name</span>
+          <span class="art-caption">Illustration with example data</span>
         </div>
+      </div>
+    </section>
 
-        <button type="submit" class="btn btn-primary" id="submit-btn">
-          Start Scan
-        </button>
-      </form>
-    </div>
-
-    <div class="card hidden" id="status-card">
-      <div class="status-bar">
-        <div class="spinner" id="spinner"></div>
-        <span id="status-text">Scanning for leads...</span>
-        <span class="scan-id" id="scan-id-display"></span>
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track">
+        <span>FIND THEM</span><span>SCORE THEM</span><span>WRITE TO THEM</span><span>LAND THEM</span>
+        <span>FIND THEM</span><span>SCORE THEM</span><span>WRITE TO THEM</span><span>LAND THEM</span>
+        <span>FIND THEM</span><span>SCORE THEM</span><span>WRITE TO THEM</span><span>LAND THEM</span>
+        <span>FIND THEM</span><span>SCORE THEM</span><span>WRITE TO THEM</span><span>LAND THEM</span>
       </div>
     </div>
 
-    <div class="card hidden" id="results-card">
-      <table class="results-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Address</th>
-            <th>Rating</th>
-            <th>Score</th>
-            <th>Signals</th>
-            <th>Email</th>
-          </tr>
-        </thead>
-        <tbody id="results-body">
-        </tbody>
-      </table>
-      <div class="empty-state hidden" id="empty-results">
-        No leads found matching your criteria.
+    <section class="block" id="how">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="sticker">How it works</span>
+          <h2>Three steps. One of them is yours.</h2>
+          <p>LeadRadar does the boring half of prospecting: the scrolling, the tab-opening, the squinting at ratings.</p>
+        </div>
+        <div class="steps">
+          <article class="card step">
+            <div class="step-num">1</div>
+            <h3>Tell it what you do</h3>
+            <p>Your service and your city. That's the whole brief.</p>
+            <div class="step-example">"Web development" &middot; "Austin, TX"</div>
+          </article>
+          <article class="card step">
+            <div class="step-num">2</div>
+            <h3>It reads every business</h3>
+            <p>It pulls live Google Maps listings, checks each one for a missing website or a shaky review history, and scores it 0&ndash;100.</p>
+            <div class="step-example">No website found &rarr; score 85</div>
+          </article>
+          <article class="card step">
+            <div class="step-num">3</div>
+            <h3>It writes the first email</h3>
+            <p>Your top ten leads each get a short, specific draft, signed with your name. Copy it, tweak it, send it.</p>
+            <div class="step-example">Best, Alex</div>
+          </article>
+        </div>
       </div>
+    </section>
+
+    <section class="stat-band">
+      <div class="wrap">
+        <div class="stat before">3 hrs</div>
+        <div class="stat after">~1 min</div>
+        <p class="stat-copy">
+          <strong>A Monday morning of prospecting, gone.</strong> Scrolling Maps and reading listings
+          one by one takes hours. A LeadRadar scan takes about a minute.
+        </p>
+      </div>
+    </section>
+
+    <section class="block" id="features">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="sticker">Features</span>
+          <h2>Built for freelancers, not sales teams.</h2>
+          <p>No CRM to configure, no seats to buy. Just a list of businesses worth emailing, and an email worth sending.</p>
+        </div>
+        <div class="features">
+          <article class="card feature">
+            <div class="feature-icon" style="background: var(--yellow)">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+            </div>
+            <h3>Real Google Maps data</h3>
+            <p>Live listings for your city, not a stale directory someone scraped in 2019.</p>
+            <span class="via">via SerpApi</span>
+          </article>
+          <article class="card feature">
+            <div class="feature-icon" style="background: var(--green)">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>
+            </div>
+            <h3>Facts, not guesses</h3>
+            <p>Signals like "no website" come straight from the listing. The AI never invents a problem the data doesn't show.</p>
+            <span class="via">Checked in code</span>
+          </article>
+          <article class="card feature">
+            <div class="feature-icon" style="background: var(--pink)">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="m13.5 6.5 4 4"/></svg>
+            </div>
+            <h3>Emails signed by you</h3>
+            <p>Short drafts built around the one thing LeadRadar found, ending with your name, not "[Your Name]".</p>
+            <span class="via">Top 10 leads per scan</span>
+          </article>
+          <article class="card feature">
+            <div class="feature-icon" style="background: var(--blue)">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.6-4.5L4 8"/><path d="M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14.6 4.5L20 16"/><path d="M20 20v-4h-4"/></svg>
+            </div>
+            <h3>Never loses a scan</h3>
+            <p>A flaky API call becomes a retry, not a lost scan. The whole pipeline runs as one durable workflow.</p>
+            <span class="via">via Temporal</span>
+          </article>
+          <article class="card feature">
+            <div class="feature-icon" style="background: var(--orange)">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="7.5" ry="2.8"/><path d="M4.5 5.5v6.5c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V5.5"/><path d="M4.5 12v6.5c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V12"/></svg>
+            </div>
+            <h3>Every lead saved</h3>
+            <p>Scores, signals and drafts are stored, so last week's scan is still there when you come back to it.</p>
+            <span class="via">via MongoDB Atlas</span>
+          </article>
+          <article class="card feature">
+            <div class="feature-icon" style="background: var(--lilac)">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.6-1.8"/></svg>
+            </div>
+            <h3>Open-weight brain</h3>
+            <p>Runs on open models through Groq, or fully on your own machine with Ollama. Switch with one setting.</p>
+            <span class="via">No lock-in</span>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="open-source">
+      <div class="wrap">
+        <div class="card open">
+          <div>
+            <span class="sticker" style="background: var(--white)">MIT licensed</span>
+            <h2>Open source. Take it, run it, sell it.</h2>
+            <p>
+              Every line is on GitHub. Self-host it for your own prospecting, or build a side business on
+              top of it. The AI at its centre is open-weight, so a scan doesn't come with a per-token bill.
+            </p>
+            <div class="open-actions">
+              <a class="btn btn-ink" href="https://github.com/mudit-palvadi/lead-radar" target="_blank" rel="noopener">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.9 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5z"/></svg>
+                View on GitHub
+              </a>
+              <a class="btn" href="/app">Use the hosted app</a>
+            </div>
+          </div>
+          <pre class="terminal" aria-label="Run LeadRadar locally"><span class="c"># run it yourself</span>
+<span class="p">$</span> git clone github.com/mudit-palvadi/lead-radar
+<span class="p">$</span> npm install
+<span class="p">$</span> npm run worker
+<span class="p">$</span> npm run dev
+<span class="c"># open localhost:3000</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <div class="card final">
+          <h2>Your next client is already on Google Maps.</h2>
+          <p>They just don't know you exist yet. Give LeadRadar a city and a skill, and get a ranked list with emails ready to send.</p>
+          <a class="btn btn-yellow btn-lg" href="/app">
+            Find my first leads <span class="arrow" aria-hidden="true">&rarr;</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span><strong>LeadRadar</strong> &middot; MIT licensed &middot; Built for Hacktoberfest 2026</span>
+      <nav>
+        <a href="/app">Scanner</a>
+        <a href="https://github.com/mudit-palvadi/lead-radar" target="_blank" rel="noopener">GitHub</a>
+      </nav>
     </div>
-  </div>
-
-  <script>
-    (function() {
-      const form = document.getElementById('scan-form');
-      const submitBtn = document.getElementById('submit-btn');
-      const statusCard = document.getElementById('status-card');
-      const statusText = document.getElementById('status-text');
-      const spinner = document.getElementById('spinner');
-      const scanIdDisplay = document.getElementById('scan-id-display');
-      const resultsCard = document.getElementById('results-card');
-      const resultsBody = document.getElementById('results-body');
-      const emptyResults = document.getElementById('empty-results');
-
-      let pollInterval = null;
-      let currentScanId = null;
-
-      form.addEventListener('submit', async function(e) {
-        e.preventDefault();
-
-        const service = document.getElementById('service').value.trim();
-        const location = document.getElementById('location').value.trim();
-        const maxLeads = parseInt(document.getElementById('maxLeads').value, 10);
-        const senderName = document.getElementById('senderName').value.trim();
-
-        const criteria = Array.from(
-          document.querySelectorAll('input[name="criteria"]:checked')
-        ).map(cb => cb.value);
-
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Starting scan...';
-
-        try {
-          const response = await fetch('/api/scans', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ service, location, maxLeads, criteria, senderName })
-          });
-
-          if (!response.ok) throw new Error('Failed to create scan');
-
-          const data = await response.json();
-          currentScanId = data.scanId;
-
-          scanIdDisplay.textContent = currentScanId;
-          statusCard.classList.remove('hidden');
-          resultsCard.classList.remove('hidden');
-          resultsBody.innerHTML = '';
-          emptyResults.classList.add('hidden');
-          spinner.style.display = 'block';
-          statusText.textContent = 'Scanning for leads...';
-          submitBtn.textContent = 'Scanning...';
-
-          startPolling(currentScanId);
-        } catch (err) {
-          alert('Failed to start scan: ' + err.message);
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'Start Scan';
-        }
-      });
-
-      function startPolling(scanId) {
-        if (pollInterval) clearInterval(pollInterval);
-        pollInterval = setInterval(() => pollScan(scanId), 3000);
-        pollScan(scanId);
-      }
-
-      async function pollScan(scanId) {
-        try {
-          const response = await fetch('/api/scans/' + scanId);
-          if (!response.ok) return;
-
-          const data = await response.json();
-
-          const labels = {
-            pending: 'Starting scan...',
-            scanning: 'Finding local businesses...',
-            classifying: 'Reading each business...',
-            drafting: 'Writing outreach emails...'
-          };
-
-          if (data.status === 'complete') {
-            spinner.style.display = 'none';
-            statusText.textContent = 'Scan complete! ' + (data.leads || []).length + ' leads found.';
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'New Scan';
-            clearInterval(pollInterval);
-            renderResults(data.leads || []);
-          } else if (data.status === 'failed') {
-            spinner.style.display = 'none';
-            statusText.textContent = 'Scan failed.';
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Try Again';
-            clearInterval(pollInterval);
-          } else if (labels[data.status]) {
-            statusText.textContent = labels[data.status];
-          }
-        } catch (err) {
-          // Silent retry on network errors
-        }
-      }
-
-      function renderResults(leads) {
-        resultsBody.innerHTML = '';
-
-        if (leads.length === 0) {
-          emptyResults.classList.remove('hidden');
-          return;
-        }
-
-        emptyResults.classList.add('hidden');
-
-        leads.forEach(function(lead) {
-          const tr = document.createElement('tr');
-
-          const signals = (lead.signals || []).map(function(s) {
-            return '<span class="tag">' + escapeHtml(s.description || s.type || '') + '</span>';
-          }).join('');
-
-          tr.innerHTML =
-            '<td>' + escapeHtml(lead.name) + '</td>' +
-            '<td>' + escapeHtml(lead.address) + '</td>' +
-            '<td>' + (lead.rating != null ? lead.rating : '—') + '</td>' +
-            '<td>' + (lead.score != null ? lead.score : '—') + '</td>' +
-            '<td><div class="signal-tags">' + signals + '</div></td>' +
-            '<td>' +
-              '<button class="btn-email" data-email="' + escapeHtml(lead.outreachEmail || '') + '">Show Email</button>' +
-              '<div class="email-reveal">' + escapeHtml(lead.outreachEmail || '') + '</div>' +
-            '</td>';
-
-          resultsBody.appendChild(tr);
-        });
-
-        resultsBody.querySelectorAll('.btn-email').forEach(function(btn) {
-          btn.addEventListener('click', function() {
-            const reveal = this.parentElement.querySelector('.email-reveal');
-            reveal.classList.toggle('visible');
-            this.textContent = reveal.classList.contains('visible') ? 'Hide Email' : 'Show Email';
-          });
-        });
-      }
-
-      function escapeHtml(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-      }
-    })();
-  </script>
+  </footer>
 </body>
 </html>

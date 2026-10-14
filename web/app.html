@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scanner · LeadRadar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    /* ---------- Top bar ---------- */
+
+    .topbar {
+      background: var(--paper);
+      border-bottom: var(--border);
+    }
+
+    .topbar .wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      height: 72px;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .back-link {
+      font-weight: 600;
+      text-decoration: none;
+      border-bottom: 3px solid transparent;
+    }
+
+    .back-link:hover {
+      border-bottom-color: var(--pink);
+    }
+
+    /* ---------- Layout ---------- */
+
+    .app {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 32px;
+      align-items: start;
+      padding-top: 36px;
+      padding-bottom: 80px;
+    }
+
+    .panel {
+      padding: 26px;
+      position: sticky;
+      top: 24px;
+    }
+
+    .panel h1 {
+      font-family: var(--font-display);
+      font-size: 1.9rem;
+      line-height: 1.05;
+      letter-spacing: -0.5px;
+    }
+
+    .panel-sub {
+      margin: 6px 0 24px;
+      color: var(--muted);
+    }
+
+    .form-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 110px;
+      gap: 14px;
+    }
+
+    .form-hint {
+      margin-top: -8px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    #submit-btn {
+      width: 100%;
+      margin-top: 6px;
+    }
+
+    .alert {
+      padding: 14px 16px;
+      background: #ffe1e8;
+      border: var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-sm);
+      font-weight: 600;
+    }
+
+    .alert ul {
+      margin: 6px 0 0 18px;
+      font-weight: 500;
+    }
+
+    .results-col {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      min-width: 0;
+    }
+
+    /* ---------- Idle state ---------- */
+
+    .idle {
+      padding: 56px 32px;
+      text-align: center;
+      background: var(--white);
+    }
+
+    .radar {
+      position: relative;
+      width: 168px;
+      height: 168px;
+      margin: 0 auto 28px;
+      border: var(--border);
+      border-radius: 50%;
+      background:
+        radial-gradient(circle, transparent 30%, rgba(17, 17, 17, 0.9) 30.5%, rgba(17, 17, 17, 0.9) 32%, transparent 32.5%),
+        radial-gradient(circle, transparent 60%, rgba(17, 17, 17, 0.9) 60.5%, rgba(17, 17, 17, 0.9) 62%, transparent 62.5%),
+        var(--yellow);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .radar::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: conic-gradient(from 0deg, rgba(255, 92, 138, 0.85), transparent 28%);
+      animation: sweep 3s linear infinite;
+    }
+
+    .radar i {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      background: var(--pink);
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+    }
+
+    .radar i:nth-of-type(1) { top: 30%; left: 62%; }
+    .radar i:nth-of-type(2) { top: 64%; left: 26%; background: var(--blue); }
+    .radar i:nth-of-type(3) { top: 70%; left: 66%; background: var(--green); }
+
+    @keyframes sweep {
+      to { transform: rotate(360deg); }
+    }
+
+    .idle h2 {
+      font-family: var(--font-display);
+      font-size: 1.7rem;
+      margin-bottom: 8px;
+    }
+
+    .idle p {
+      max-width: 44ch;
+      margin: 0 auto;
+      color: var(--muted);
+    }
+
+    /* ---------- Progress ---------- */
+
+    .progress {
+      padding: 24px 26px;
+    }
+
+    .progress-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .progress-head h2 {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+    }
+
+    .timer {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      padding: 4px 12px;
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      border-radius: 999px;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      list-style: none;
+    }
+
+    .steps li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      background: var(--white);
+      border: var(--border);
+      border-radius: var(--radius-sm);
+      opacity: 0.55;
+      transition: background 0.2s ease, opacity 0.2s ease;
+    }
+
+    .steps li b {
+      flex: none;
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      font-family: var(--font-mono);
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+    }
+
+    .steps li.active {
+      opacity: 1;
+      background: var(--yellow);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .steps li.active b {
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    .steps li.done {
+      opacity: 1;
+      background: var(--green);
+    }
+
+    .steps li.done b {
+      background: var(--ink);
+      color: var(--white);
+    }
+
+    @keyframes pulse {
+      50% { transform: scale(1.15); }
+    }
+
+    .scan-id {
+      margin-top: 16px;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: var(--muted);
+    }
+
+    /* ---------- Summary ---------- */
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .stat-tile {
+      padding: 16px 18px;
+    }
+
+    .stat-tile:nth-child(1) { background: var(--yellow); }
+    .stat-tile:nth-child(2) { background: var(--pink); }
+    .stat-tile:nth-child(3) { background: var(--green); }
+    .stat-tile:nth-child(4) { background: var(--lilac); }
+
+    .stat-tile strong {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 2.1rem;
+      line-height: 1.1;
+    }
+
+    .stat-tile span {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .results-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .results-title h2 {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+    }
+
+    .results-title p {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    /* ---------- Lead cards ---------- */
+
+    .leads {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .lead {
+      padding: 20px;
+      animation: drop-in 0.35s ease both;
+    }
+
+    @keyframes drop-in {
+      from { opacity: 0; transform: translateY(10px); }
+    }
+
+    .lead-main {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .score {
+      width: 74px;
+      height: 74px;
+      display: grid;
+      place-content: center;
+      text-align: center;
+      border: var(--border);
+      border-radius: 50%;
+      box-shadow: 3px 3px 0 var(--ink);
+    }
+
+    .score strong {
+      font-family: var(--font-display);
+      font-size: 1.55rem;
+      line-height: 1;
+    }
+
+    .score small {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      font-weight: 700;
+    }
+
+    .tier-hot { background: var(--pink); }
+    .tier-warm { background: var(--orange); }
+    .tier-cool { background: var(--blue); color: var(--white); }
+
+    .lead-name {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .lead-name h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .rank {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      background: var(--ink);
+      color: var(--white);
+      border-radius: 999px;
+    }
+
+    .lead-meta {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .facts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      margin-top: 10px;
+      list-style: none;
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+
+    .facts a {
+      text-decoration: none;
+      border-bottom: 2px solid var(--ink);
+    }
+
+    .facts a:hover {
+      background: var(--yellow);
+    }
+
+    .signals {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 3px 10px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      border: 2px solid var(--ink);
+      border-radius: 999px;
+      background: var(--white);
+    }
+
+    .tag-high { background: var(--yellow); }
+    .tag-medium { background: #ffd7b5; }
+
+    .lead-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .email {
+      margin-top: 18px;
+      padding: 18px;
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      background: var(--paper);
+      border: var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    .no-email {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: var(--muted);
+      text-align: center;
+      max-width: 120px;
+    }
+
+    .empty {
+      padding: 40px 28px;
+      text-align: center;
+    }
+
+    .empty h2 {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      margin-bottom: 6px;
+    }
+
+    /* ---------- Responsive ---------- */
+
+    @media (max-width: 980px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .panel {
+        position: static;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .steps {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .lead-main {
+        grid-template-columns: auto 1fr;
+      }
+
+      .lead-actions {
+        grid-column: 1 / -1;
+        flex-direction: row;
+      }
+
+      .back-link span {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <div class="topbar-left">
+        <a class="brand" href="/" aria-label="LeadRadar home">
+          <span class="brand-mark">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12 19 5.5"/>
+              <circle cx="16.4" cy="8.2" r="1.7" fill="#111" stroke="none"/>
+            </svg>
+          </span>
+          LeadRadar
+        </a>
+        <span class="sticker" style="background: var(--green)">Scanner</span>
+      </div>
+      <a class="back-link" href="/">&larr; <span>Back to home</span></a>
+    </div>
+  </header>
+
+  <main class="wrap app">
+    <aside class="card panel">
+      <h1>New scan</h1>
+      <p class="panel-sub">What do you sell, and where?</p>
+
+      <form id="scan-form" class="form-stack" novalidate>
+        <div class="field">
+          <label for="service">Your service</label>
+          <input class="input" type="text" id="service" name="service" placeholder="e.g. Web Development" minlength="2" maxlength="100" required>
+        </div>
+        <div class="field">
+          <label for="location">City</label>
+          <input class="input" type="text" id="location" name="location" placeholder="e.g. Austin, TX" minlength="2" maxlength="100" required>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="senderName">Your name</label>
+            <input class="input" type="text" id="senderName" name="senderName" placeholder="e.g. Alex" maxlength="60" required>
+          </div>
+          <div class="field">
+            <label for="maxLeads">Leads</label>
+            <input class="input" type="number" id="maxLeads" name="maxLeads" value="10" min="5" max="50" required>
+          </div>
+        </div>
+        <p class="form-hint">Your name signs the emails. Scan 5&ndash;50 leads.</p>
+
+        <div class="field">
+          <span class="field-label">Look for</span>
+          <div class="chips">
+            <label class="chip"><input type="checkbox" name="criteria" value="noWebsite" checked><span>No website</span></label>
+            <label class="chip"><input type="checkbox" name="criteria" value="outdatedWebsite" checked><span>Outdated website</span></label>
+            <label class="chip"><input type="checkbox" name="criteria" value="badReviewsNoResponse"><span>Bad reviews</span></label>
+          </div>
+        </div>
+
+        <div class="alert hidden" id="form-error" role="alert"></div>
+
+        <button type="submit" class="btn btn-primary btn-lg" id="submit-btn">
+          Start scan <span class="arrow" aria-hidden="true">&rarr;</span>
+        </button>
+      </form>
+    </aside>
+
+    <section class="results-col" aria-live="polite">
+      <div class="card idle" id="idle">
+        <div class="radar" aria-hidden="true"><i></i><i></i><i></i></div>
+        <h2>Your leads land here</h2>
+        <p>Fill in the form and hit <strong>Start scan</strong>. LeadRadar finds local businesses, scores them, and drafts an email for the best ten.</p>
+      </div>
+
+      <div class="card progress hidden" id="progress">
+        <div class="progress-head">
+          <h2 id="progress-title">Scanning&hellip;</h2>
+          <span class="timer" id="timer">0:00</span>
+        </div>
+        <ol class="steps" id="steps">
+          <li data-step="0"><b>1</b>Finding businesses</li>
+          <li data-step="1"><b>2</b>Scoring leads</li>
+          <li data-step="2"><b>3</b>Writing emails</li>
+          <li data-step="3"><b>4</b>Done</li>
+        </ol>
+        <p class="scan-id" id="scan-id"></p>
+      </div>
+
+      <div class="alert hidden" id="scan-error" role="alert"></div>
+
+      <div class="stats hidden" id="stats">
+        <div class="card stat-tile"><strong id="stat-total">0</strong><span>Leads found</span></div>
+        <div class="card stat-tile"><strong id="stat-hot">0</strong><span>Hot leads</span></div>
+        <div class="card stat-tile"><strong id="stat-nosite">0</strong><span>No website</span></div>
+        <div class="card stat-tile"><strong id="stat-emails">0</strong><span>Emails drafted</span></div>
+      </div>
+
+      <div class="results-title hidden" id="results-title">
+        <h2>Ranked leads</h2>
+        <p>Highest score first. Emails are drafts, so give them a read before sending.</p>
+      </div>
+
+      <div class="leads" id="leads"></div>
+
+      <div class="card empty hidden" id="empty">
+        <h2>No leads this time</h2>
+        <p>Try a nearby city or a broader service description.</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function() {
+      var form = document.getElementById('scan-form');
+      var submitBtn = document.getElementById('submit-btn');
+      var formError = document.getElementById('form-error');
+      var idle = document.getElementById('idle');
+      var progress = document.getElementById('progress');
+      var progressTitle = document.getElementById('progress-title');
+      var timerEl = document.getElementById('timer');
+      var stepEls = document.querySelectorAll('#steps li');
+      var scanIdEl = document.getElementById('scan-id');
+      var scanError = document.getElementById('scan-error');
+      var stats = document.getElementById('stats');
+      var resultsTitle = document.getElementById('results-title');
+      var leadsEl = document.getElementById('leads');
+      var empty = document.getElementById('empty');
+
+      var STORAGE_KEY = 'leadradar:last-scan';
+      var STEP_FOR_STATUS = { pending: 0, scanning: 0, classifying: 1, drafting: 2, complete: 4 };
+      var TITLE_FOR_STATUS = {
+        pending: 'Starting your scan…',
+        scanning: 'Finding local businesses…',
+        classifying: 'Scoring every lead…',
+        drafting: 'Writing outreach emails…'
+      };
+
+      var pollInterval = null;
+      var timerInterval = null;
+      var startedAt = 0;
+
+      restoreLastInputs();
+
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        hide(formError);
+
+        var payload = {
+          service: value('service'),
+          location: value('location'),
+          senderName: value('senderName'),
+          maxLeads: parseInt(value('maxLeads'), 10),
+          criteria: Array.from(form.querySelectorAll('input[name="criteria"]:checked')).map(function(cb) { return cb.value; })
+        };
+
+        var problems = validate(payload);
+        if (problems.length) {
+          showError(formError, 'Almost there:', problems);
+          return;
+        }
+
+        saveLastInputs(payload);
+        setBusy(true, 'Starting…');
+
+        try {
+          var response = await fetch('/api/scans', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          var data = await response.json().catch(function() { return {}; });
+
+          if (!response.ok) {
+            var details = (data.details || []).map(function(d) {
+              return (d.path || []).join('.') + ': ' + d.message;
+            });
+            throw Object.assign(new Error(data.error || 'The scan could not be started.'), { details: details });
+          }
+
+          startScanView(data.scanId);
+        } catch (err) {
+          showError(formError, err.message || 'The scan could not be started.', err.details || []);
+          setBusy(false);
+        }
+      });
+
+      function validate(p) {
+        var problems = [];
+        if (p.service.length < 2) problems.push('Tell us your service (at least 2 characters).');
+        if (p.location.length < 2) problems.push('Add a city (at least 2 characters).');
+        if (!p.senderName) problems.push('Add your name so the emails can be signed.');
+        if (!(p.maxLeads >= 5 && p.maxLeads <= 50)) problems.push('Pick between 5 and 50 leads.');
+        return problems;
+      }
+
+      function startScanView(scanId) {
+        hide(idle);
+        hide(scanError);
+        hide(stats);
+        hide(resultsTitle);
+        hide(empty);
+        leadsEl.innerHTML = '';
+        show(progress);
+        scanIdEl.textContent = 'Scan ' + scanId;
+        setStep('pending');
+        setBusy(true, 'Scanning…');
+
+        startedAt = Date.now();
+        clearInterval(timerInterval);
+        timerInterval = setInterval(tick, 1000);
+        tick();
+
+        clearInterval(pollInterval);
+        pollInterval = setInterval(function() { pollScan(scanId); }, 3000);
+        pollScan(scanId);
+      }
+
+      async function pollScan(scanId) {
+        try {
+          var response = await fetch('/api/scans/' + encodeURIComponent(scanId));
+          if (!response.ok) return;
+          var data = await response.json();
+
+          if (data.status === 'complete') {
+            finish();
+            setStep('complete');
+            progressTitle.textContent = 'Done in ' + timerEl.textContent;
+            renderResults(data.leads || []);
+          } else if (data.status === 'failed') {
+            finish();
+            hide(progress);
+            showError(scanError, 'This scan failed.', data.error ? [data.error] : ['Please try again in a moment.']);
+          } else if (data.status in TITLE_FOR_STATUS) {
+            setStep(data.status);
+          }
+        } catch (err) {
+          // Network blip: the next poll retries.
+        }
+      }
+
+      function finish() {
+        clearInterval(pollInterval);
+        clearInterval(timerInterval);
+        setBusy(false, 'Run another scan');
+      }
+
+      function setStep(status) {
+        var current = STEP_FOR_STATUS[status];
+        stepEls.forEach(function(li, i) {
+          li.classList.toggle('done', i < current);
+          li.classList.toggle('active', i === current);
+        });
+        if (TITLE_FOR_STATUS[status]) progressTitle.textContent = TITLE_FOR_STATUS[status];
+      }
+
+      function tick() {
+        var s = Math.floor((Date.now() - startedAt) / 1000);
+        timerEl.textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+      }
+
+      function renderResults(leads) {
+        if (leads.length === 0) {
+          show(empty);
+          return;
+        }
+
+        document.getElementById('stat-total').textContent = leads.length;
+        document.getElementById('stat-hot').textContent = leads.filter(function(l) { return tier(l.score).name === 'hot'; }).length;
+        document.getElementById('stat-nosite').textContent = leads.filter(function(l) { return !l.website; }).length;
+        document.getElementById('stat-emails').textContent = leads.filter(function(l) { return l.outreachEmail; }).length;
+        show(stats);
+        show(resultsTitle);
+
+        leadsEl.innerHTML = leads.map(leadCard).join('');
+
+        leadsEl.querySelectorAll('[data-toggle]').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            var email = document.getElementById(btn.getAttribute('data-toggle'));
+            var open = email.classList.toggle('hidden') === false;
+            btn.textContent = open ? 'Hide email' : 'Show email';
+            btn.setAttribute('aria-expanded', String(open));
+          });
+        });
+
+        leadsEl.querySelectorAll('[data-copy]').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            var text = document.getElementById(btn.getAttribute('data-copy')).textContent;
+            copyText(text).then(function() {
+              btn.textContent = 'Copied!';
+              setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+            });
+          });
+        });
+      }
+
+      function leadCard(lead, i) {
+        var t = tier(lead.score);
+        var emailId = 'email-' + i;
+        var facts = [];
+
+        if (lead.rating != null) {
+          facts.push('&#9733; ' + Number(lead.rating).toFixed(1) + (lead.reviewCount != null ? ' (' + lead.reviewCount + ' reviews)' : ''));
+        }
+        facts.push(safeUrl(lead.website)
+          ? '<a href="' + escapeHtml(lead.website) + '" target="_blank" rel="noopener nofollow">Website &#8599;</a>'
+          : 'No website');
+        if (lead.phone) facts.push(escapeHtml(lead.phone));
+        if (safeUrl(lead.googleMapsUrl)) {
+          facts.push('<a href="' + escapeHtml(lead.googleMapsUrl) + '" target="_blank" rel="noopener nofollow">Google Maps &#8599;</a>');
+        }
+
+        var signals = (lead.signals || []).map(function(s) {
+          return '<span class="tag tag-' + escapeHtml(s.severity || 'low') + '">' + escapeHtml(s.description || s.type || '') + '</span>';
+        }).join('');
+
+        var meta = [lead.category, lead.address].filter(Boolean).map(escapeHtml).join(' &middot; ');
+
+        var actions = lead.outreachEmail
+          ? '<button type="button" class="btn btn-sm btn-yellow" data-toggle="' + emailId + '" aria-expanded="false" aria-controls="' + emailId + '">Show email</button>' +
+            '<button type="button" class="btn btn-sm" data-copy="' + emailId + '">Copy</button>'
+          : '<span class="no-email">Emails go to the top 10</span>';
+
+        return '<article class="card lead" style="animation-delay:' + Math.min(i * 60, 600) + 'ms">' +
+          '<div class="lead-main">' +
+            '<div class="score tier-' + t.name + '"><strong>' + (lead.score != null ? lead.score : '–') + '</strong><small>' + t.label + '</small></div>' +
+            '<div>' +
+              '<div class="lead-name"><span class="rank">#' + (i + 1) + '</span><h3>' + escapeHtml(lead.name) + '</h3></div>' +
+              (meta ? '<p class="lead-meta">' + meta + '</p>' : '') +
+              '<ul class="facts">' + facts.map(function(f) { return '<li>' + f + '</li>'; }).join('') + '</ul>' +
+              (signals ? '<div class="signals">' + signals + '</div>' : '') +
+            '</div>' +
+            '<div class="lead-actions">' + actions + '</div>' +
+          '</div>' +
+          (lead.outreachEmail ? '<pre class="email hidden" id="' + emailId + '">' + escapeHtml(lead.outreachEmail) + '</pre>' : '') +
+        '</article>';
+      }
+
+      function tier(score) {
+        if (score >= 70) return { name: 'hot', label: 'HOT' };
+        if (score >= 50) return { name: 'warm', label: 'WARM' };
+        return { name: 'cool', label: 'COOL' };
+      }
+
+      function setBusy(busy, label) {
+        submitBtn.disabled = busy;
+        submitBtn.innerHTML = escapeHtml(label || 'Start scan') + (busy ? '' : ' <span class="arrow" aria-hidden="true">&rarr;</span>');
+      }
+
+      function showError(el, title, items) {
+        el.innerHTML = escapeHtml(title) + (items && items.length
+          ? '<ul>' + items.map(function(m) { return '<li>' + escapeHtml(m) + '</li>'; }).join('') + '</ul>'
+          : '');
+        show(el);
+      }
+
+      function copyText(text) {
+        if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+        return Promise.resolve();
+      }
+
+      function saveLastInputs(p) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({ service: p.service, location: p.location, senderName: p.senderName }));
+        } catch (e) { /* storage unavailable */ }
+      }
+
+      function restoreLastInputs() {
+        try {
+          var saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+          ['service', 'location', 'senderName'].forEach(function(key) {
+            if (saved[key]) document.getElementById(key).value = saved[key];
+          });
+        } catch (e) { /* storage unavailable */ }
+      }
+
+      function safeUrl(url) {
+        return typeof url === 'string' && /^https?:\/\//i.test(url);
+      }
+
+      function value(id) {
+        return document.getElementById(id).value.trim();
+      }
+
+      function show(el) { el.classList.remove('hidden'); }
+      function hide(el) { el.classList.add('hidden'); }
+
+      function escapeHtml(str) {
+        return (str == null ? '' : String(str))
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+    })();
+  </script>
+</body>
+</html>

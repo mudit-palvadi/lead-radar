@@ -17,7 +17,7 @@ app.use(express.json());
 
 // Works from src/api (tsx) and dist/api (compiled) alike.
 const webDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../web');
-app.use(express.static(webDir));
+app.use(express.static(webDir, { extensions: ['html'] }));
 
 let workflowClient: WorkflowClient | null = null;
 

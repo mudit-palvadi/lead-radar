@@ -1,0 +1,334 @@
+/* LeadRadar neubrutalist design system, shared by the landing page and the scanner. */
+
+:root {
+  --ink: #111111;
+  --paper: #fff8e7;
+  --white: #ffffff;
+  --yellow: #ffd60a;
+  --pink: #ff5c8a;
+  --blue: #4d8dff;
+  --green: #3ddc97;
+  --orange: #ff8c42;
+  --lilac: #b79cff;
+  --muted: #4a4a4a;
+
+  --border: 3px solid var(--ink);
+  --shadow: 6px 6px 0 var(--ink);
+  --shadow-sm: 4px 4px 0 var(--ink);
+  --shadow-lg: 10px 10px 0 var(--ink);
+  --radius: 12px;
+  --radius-sm: 8px;
+
+  --font-display: 'Archivo Black', 'Arial Black', Impact, sans-serif;
+  --font-body: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image: radial-gradient(rgba(17, 17, 17, 0.12) 1.2px, transparent 1.2px);
+  background-size: 22px 22px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+
+img, svg {
+  display: block;
+}
+
+.wrap {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Brand ---------- */
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  letter-spacing: -0.5px;
+  text-decoration: none;
+}
+
+.brand-mark {
+  width: 40px;
+  height: 40px;
+  background: var(--yellow);
+  border: var(--border);
+  border-radius: 50%;
+  box-shadow: 3px 3px 0 var(--ink);
+  display: grid;
+  place-items: center;
+}
+
+/* ---------- Buttons ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 24px;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+.btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--ink);
+}
+
+.btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+
+.btn:focus-visible,
+.chip input:focus-visible + span,
+input:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 3px;
+}
+
+.btn:disabled {
+  cursor: progress;
+  opacity: 0.75;
+  transform: none;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary {
+  background: var(--pink);
+}
+
+.btn-yellow {
+  background: var(--yellow);
+}
+
+.btn-ink {
+  background: var(--ink);
+  color: var(--white);
+  box-shadow: 4px 4px 0 var(--pink);
+}
+
+.btn-ink:hover {
+  box-shadow: 6px 6px 0 var(--pink);
+}
+
+.btn-lg {
+  padding: 18px 30px;
+  font-size: 1.15rem;
+}
+
+.btn-sm {
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.btn-sm:hover {
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.arrow {
+  transition: transform 0.15s ease;
+}
+
+.btn:hover .arrow {
+  transform: translateX(4px);
+}
+
+/* ---------- Surfaces ---------- */
+
+.card {
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.sticker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--yellow);
+  border: var(--border);
+  border-radius: 999px;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.highlight {
+  position: relative;
+  white-space: nowrap;
+  z-index: 0;
+}
+
+.highlight::after {
+  content: '';
+  position: absolute;
+  left: -4px;
+  right: -4px;
+  bottom: 0.08em;
+  height: 0.42em;
+  background: var(--yellow);
+  border: 2px solid var(--ink);
+  z-index: -1;
+  transform: rotate(-1.5deg);
+}
+
+/* ---------- Forms ---------- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field > label,
+.field-label {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.field .hint {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.input {
+  width: 100%;
+  padding: 12px 14px;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--ink);
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 3px 3px 0 var(--ink);
+  transition: box-shadow 0.12s ease, transform 0.12s ease;
+}
+
+.input::placeholder {
+  color: #8a8a8a;
+}
+
+.input:focus {
+  outline: none;
+  background: #fffdf5;
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0 var(--blue);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.chip {
+  cursor: pointer;
+}
+
+.chip input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chip span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  background: var(--white);
+  border: var(--border);
+  border-radius: 999px;
+  box-shadow: 3px 3px 0 var(--ink);
+  transition: background 0.12s ease, transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.chip span::before {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--white);
+}
+
+.chip input:checked + span {
+  background: var(--green);
+}
+
+.chip input:checked + span::before {
+  background: var(--ink);
+}
+
+.chip:hover span {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

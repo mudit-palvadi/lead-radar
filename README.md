@@ -67,7 +67,8 @@ npm run worker              # 2. the worker
 npm run dev                 # 3. the API
 ```
 
-Then open `http://localhost:3000`, type a service and a city, and hit **Start Scan**.
+Then open `http://localhost:3000`, click **Find my first leads**, type a service and a city, and hit
+**Start scan**. The scanner itself lives at `http://localhost:3000/app`.
 
 The first scan takes a minute or two. After that it's fast — see the note below.
 
@@ -129,7 +130,7 @@ is stored in **MongoDB Atlas**, so a scan you ran last week is still there when 
 | The data | **MongoDB Atlas** | Leads, scores and drafts; free tier is plenty. |
 | The source | **SerpApi** | Live Google Maps results. Sample-data fallback if you have no key yet. |
 | The host | **Render** | One `render.yaml` blueprint for the API and the worker. |
-| The front end | A single HTML file | No build step, no framework, works on a phone. |
+| The front end | Plain HTML and CSS: a landing page and the scanner | No build step, no framework, works on a phone. |
 
 ---
 
