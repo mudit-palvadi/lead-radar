@@ -18,6 +18,22 @@ interface SerpApiResponse {
   error?: string;
 }
 
+/**
+ * SerpApi occasionally hands back a row that isn't really a business — most
+ * often the city name repeated back with no title. They make for embarrassing
+ * emails, because a lead named "Austin" invites the model to invent details.
+ */
+export function isUsableResult(result: SerpApiGoogleMapsResult, location: string): boolean {
+  const title = result.title?.trim();
+  if (!title || title.length < 3) return false;
+
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  const place = norm(location);
+  const named = norm(title);
+
+  return named !== place && !place.split(' ').includes(named);
+}
+
 export async function searchBusinesses(
   query: string,
   location: string,
@@ -41,7 +57,11 @@ export async function searchBusinesses(
       throw new Error(`SerpApi error: ${data.error}`);
     }
 
-    return (data.local_results || []).slice(0, maxResults).map((result) => ({
+    const usable = (data.local_results || []).filter((result) => isUsableResult(result, location));
+    const dropped = (data.local_results?.length ?? 0) - usable.length;
+    if (dropped > 0) console.log(`[search] dropped ${dropped} unusable result(s)`);
+
+    return usable.slice(0, maxResults).map((result) => ({
       id: uuidv4(),
       name: result.title || 'Unknown Business',
       address: result.address || location,
@@ -63,7 +83,7 @@ export async function searchBusinesses(
   }
 }
 
-function detectSignals(result: SerpApiGoogleMapsResult): BusinessLead['signals'] {
+export function detectSignals(result: SerpApiGoogleMapsResult): BusinessLead['signals'] {
   const signals: BusinessLead['signals'] = [];
 
   if (!result.website) {

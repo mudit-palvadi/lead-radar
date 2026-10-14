@@ -72,9 +72,14 @@ export interface ScanResult {
   error?: string;
 }
 
+/**
+ * The model contributes judgement only. Signals are facts read straight off
+ * the search data, because asking a 7B model to report them reliably produced
+ * businesses tagged as having no website while their website URL sat right
+ * there in the same record.
+ */
 export interface ClassificationResult {
   score: number;
-  signals: LeadSignal[];
   reasoning: string;
 }
 
